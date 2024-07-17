@@ -77,6 +77,7 @@ impl<'probe> JtagDtm<'probe> {
 
         if op != 0 {
             // We masked out two bits, parse(op) always works on values 0, 1, 2 and 3
+            println!("INVALID DMI OP status");
             return Err(DmiOperationStatus::parse(op).expect("INVALID DMI OP status"));
         }
 
@@ -282,7 +283,8 @@ impl DtmAccess for JtagDtm<'_> {
         value: u32,
         timeout: Duration,
     ) -> Result<Option<u32>, RiscvError> {
-        self.dmi_register_access_with_timeout(DmiOperation::Write { address, value }, timeout)
+        self.schedule_dmi_register_access(DmiOperation::Write { address, value })?;
+        self.dmi_register_access_with_timeout(DmiOperation::NoOp, timeout)
             .map(Some)
     }
 
