@@ -125,6 +125,7 @@ impl AbstractCommandErrorKind {
             5 => Self::Bus,
             6 => Self::_Reserved,
             7 => Self::Other,
+            8_u32..=u32::MAX => todo!(),
         };
 
         Err(err)

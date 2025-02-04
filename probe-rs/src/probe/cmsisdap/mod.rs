@@ -137,12 +137,12 @@ impl CmsisDap {
         let packet_size = device.find_packet_size()? as u16;
 
         // Read remaining probe information.
-        let packet_count = commands::send_command(&mut device, PacketCountCommand {})?;
-        let caps: Capabilities = commands::send_command(&mut device, CapabilitiesCommand {})?;
+        let packet_count = commands::send_command(&mut device, &PacketCountCommand {})?;
+        let caps: Capabilities = commands::send_command(&mut device, &CapabilitiesCommand {})?;
         tracing::debug!("Detected probe capabilities: {:?}", caps);
         let mut swo_buffer_size = None;
         if caps.swo_uart_implemented || caps.swo_manchester_implemented {
-            let swo_size = commands::send_command(&mut device, SWOTraceBufferSizeCommand {})?;
+            let swo_size = commands::send_command(&mut device, &SWOTraceBufferSizeCommand {})?;
             swo_buffer_size = Some(swo_size as usize);
             tracing::debug!("Probe SWO buffer size: {}", swo_size);
         }
