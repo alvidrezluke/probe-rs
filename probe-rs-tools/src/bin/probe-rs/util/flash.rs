@@ -4,7 +4,6 @@ use super::common_options::{BinaryDownloadOptions, LoadedProbeOptions, Operation
 use super::logging;
 
 use std::cell::RefCell;
-use std::fs::File;
 use std::time::Duration;
 use std::{path::Path, time::Instant};
 
@@ -16,8 +15,6 @@ use probe_rs::{
     flashing::{DownloadOptions, FileDownloadError, FlashLoader, FlashProgress, ProgressEvent},
     Session,
 };
-
-use anyhow::Context;
 
 /// Performs the flash download with the given loader. Ensure that the loader has the data to load already stored.
 /// This function also manages the update and display of progress bars.
@@ -35,6 +32,7 @@ pub fn run_flash_download(
     options.do_chip_erase = do_chip_erase;
     options.disable_double_buffering = download_options.disable_double_buffering;
     options.verify = download_options.verify;
+    options.preverify = download_options.preverify;
 
     if !download_options.disable_progressbars {
         // Create progress bars.
@@ -75,7 +73,7 @@ pub fn run_flash_download(
                     for phase_layout in phases {
                         if restore_unwritten {
                             let fill_size =
-                                flash_layout.fills().iter().map(|s| s.size()).sum::<u64>();
+                                phase_layout.fills().iter().map(|s| s.size()).sum::<u64>();
                             progress_bars
                                 .fill
                                 .add(multi_progress.add(ProgressBar::new(fill_size)));
@@ -83,7 +81,7 @@ pub fn run_flash_download(
 
                         if !chip_erase {
                             let sector_size =
-                                flash_layout.sectors().iter().map(|s| s.size()).sum::<u64>();
+                                phase_layout.sectors().iter().map(|s| s.size()).sum::<u64>();
                             progress_bars
                                 .erase
                                 .add(multi_progress.add(ProgressBar::new(sector_size)));
@@ -105,10 +103,15 @@ pub fn run_flash_download(
                         .map(|path| visualizer.write_svg(path));
                 }
                 ProgressEvent::StartedProgramming { length } => {
+                    progress_bars.program.mark_start_now();
                     progress_bars.program.set_length(length);
                 }
-                ProgressEvent::StartedErasing => {}
-                ProgressEvent::StartedFilling => {}
+                ProgressEvent::StartedErasing => {
+                    progress_bars.erase.mark_start_now();
+                }
+                ProgressEvent::StartedFilling => {
+                    progress_bars.fill.mark_start_now();
+                }
                 ProgressEvent::PageProgrammed { size, .. } => {
                     progress_bars.program.inc(size as u64);
                 }
@@ -146,7 +149,7 @@ pub fn run_flash_download(
     logging::clear_progress_bar();
 
     logging::eprintln(format!(
-        "    {} in {}s",
+        "     {} in {:.02}s",
         "Finished".green().bold(),
         flash_timer.elapsed().as_secs_f32(),
     ));
@@ -162,20 +165,10 @@ pub fn build_loader(
     path: impl AsRef<Path>,
     format_options: FormatOptions,
     image_instruction_set: Option<InstructionSet>,
-) -> anyhow::Result<FlashLoader> {
-    // Create the flash loader
-    let mut loader = session.target().flash_loader();
+) -> Result<FlashLoader, FileDownloadError> {
+    let format = format_options.into_format(session.target());
 
-    // Add data from the BIN.
-    let mut file = match File::open(path) {
-        Ok(file) => file,
-        Err(e) => return Err(FileDownloadError::IO(e)).context("Failed to open binary file."),
-    };
-
-    let format = format_options.into_format(session.target())?;
-    loader.load_image(session, &mut file, format, image_instruction_set)?;
-
-    Ok(loader)
+    probe_rs::flashing::build_loader(session, path, format, image_instruction_set)
 }
 
 struct ProgressBars {
@@ -184,7 +177,7 @@ struct ProgressBars {
     program: ProgressBarGroup,
 }
 
-struct ProgressBarGroup {
+pub struct ProgressBarGroup {
     message: String,
     bars: Vec<ProgressBar>,
     selected: usize,
@@ -192,7 +185,7 @@ struct ProgressBarGroup {
 }
 
 impl ProgressBarGroup {
-    fn new(message: &str) -> Self {
+    pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),
             bars: vec![],
@@ -201,59 +194,87 @@ impl ProgressBarGroup {
         }
     }
 
-    fn add(&mut self, bar: ProgressBar) {
-        let msg_template = "{msg:.green.bold} {spinner} [{elapsed_precise}] [{wide_bar}] {bytes:>8}/{total_bytes:>8} @ {bytes_per_sec:>10} (eta {eta:3})";
-        let style = ProgressStyle::default_bar()
+    fn idle() -> ProgressStyle {
+        ProgressStyle::with_template("{msg:.green.bold} {spinner} {percent:>3}% [{bar:20}]")
+            .expect("Error in progress bar creation. This is a bug, please report it.")
             .tick_chars("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈✔")
             .progress_chars("--")
-            .template(msg_template)
-            .expect("Error in progress bar creation. This is a bug, please report it.");
+    }
 
+    fn active() -> ProgressStyle {
+        ProgressStyle::with_template("{msg:.green.bold} {spinner} {percent:>3}% [{bar:20}] {bytes:>10} @ {bytes_per_sec:>12} (ETA {eta})")
+            .expect("Error in progress bar creation. This is a bug, please report it.")
+            .tick_chars("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈✔")
+            .progress_chars("##-")
+    }
+
+    fn finished() -> ProgressStyle {
+        ProgressStyle::with_template("{msg:.green.bold} {spinner} {percent:>3}% [{bar:20}] {bytes:>10} @ {bytes_per_sec:>12} (took {elapsed})")
+            .expect("Error in progress bar creation. This is a bug, please report it.")
+            .tick_chars("⠁⠁⠉⠙⠚⠒⠂⠂⠒⠲⠴⠤⠄⠄⠤⠠⠠⠤⠦⠖⠒⠐⠐⠒⠓⠋⠉⠈⠈✔")
+            .progress_chars("##")
+    }
+
+    pub fn add(&mut self, bar: ProgressBar) {
         if self.append_phase {
             bar.set_message(format!("{} {}", self.message, self.bars.len() + 1));
         } else {
             bar.set_message(self.message.clone());
         }
-        bar.set_style(style);
+        bar.set_style(Self::idle());
         bar.enable_steady_tick(Duration::from_millis(100));
         bar.reset_elapsed();
 
         self.bars.push(bar);
     }
 
-    fn set_length(&mut self, length: u64) {
+    pub fn set_length(&mut self, length: u64) {
         if let Some(bar) = self.bars.get(self.selected) {
             bar.set_length(length);
         }
     }
 
-    fn inc(&mut self, size: u64) {
+    pub fn inc(&mut self, size: u64) {
         if let Some(bar) = self.bars.get(self.selected) {
-            let style = bar.style().progress_chars("##-");
-            bar.set_style(style);
+            bar.set_style(Self::active());
             bar.inc(size);
         }
     }
 
-    fn abandon(&mut self) {
+    pub fn len(&mut self) -> u64 {
+        self.bars
+            .get(self.selected)
+            .and_then(|bar| bar.length())
+            .unwrap_or(0)
+    }
+
+    pub fn abandon(&mut self) {
         if let Some(bar) = self.bars.get(self.selected) {
             bar.abandon();
         }
         self.next();
     }
 
-    fn finish(&mut self) {
+    pub fn finish(&mut self) {
         if let Some(bar) = self.bars.get(self.selected) {
+            bar.set_style(Self::finished());
             bar.finish();
         }
         self.next();
     }
 
-    fn next(&mut self) {
+    pub fn next(&mut self) {
         self.selected += 1;
     }
 
-    fn append_phase(&mut self) {
+    pub fn append_phase(&mut self) {
         self.append_phase = true;
+    }
+
+    pub fn mark_start_now(&mut self) {
+        if let Some(bar) = self.bars.get(self.selected) {
+            bar.reset_elapsed();
+            bar.reset_eta();
+        }
     }
 }

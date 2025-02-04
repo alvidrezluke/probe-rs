@@ -2,13 +2,11 @@
 
 use std::{sync::Arc, time::Duration};
 
-use probe_rs_target::Chip;
-
 use super::esp::EspFlashSizeDetector;
 use crate::{
     architecture::riscv::{
         communication_interface::RiscvCommunicationInterface, sequences::RiscvDebugSequence,
-        Dmcontrol,
+        Dmcontrol, Dmstatus,
     },
     MemoryInterface, Session,
 };
@@ -21,12 +19,13 @@ pub struct ESP32C2 {
 
 impl ESP32C2 {
     /// Creates a new debug sequence handle for the ESP32C2.
-    pub fn create(chip: &Chip) -> Arc<dyn RiscvDebugSequence> {
+    pub fn create() -> Arc<dyn RiscvDebugSequence> {
         Arc::new(Self {
             inner: EspFlashSizeDetector {
-                stack_pointer: EspFlashSizeDetector::stack_pointer(chip),
-                load_address: 0, // Unused for RISC-V
+                stack_pointer: 0x403a0000,
+                load_address: 0x4038c000,
                 spiflash_peripheral: 0x6000_2000,
+                efuse_get_spiconfig_fn: None,
                 attach_fn: 0x4000_0178,
             },
         })
@@ -36,6 +35,10 @@ impl ESP32C2 {
 impl RiscvDebugSequence for ESP32C2 {
     fn on_connect(&self, interface: &mut RiscvCommunicationInterface) -> Result<(), crate::Error> {
         tracing::info!("Disabling esp32c2 watchdogs...");
+
+        // FIXME: this is a terrible hack because we should not need to halt to read memory.
+        interface.sysbus_requires_halting(true);
+
         // disable super wdt
         interface.write_word_32(0x600080A4, 0x8F1D312A)?; // write protection off
         let current = interface.read_word_32(0x600080A0)?;
@@ -76,17 +79,22 @@ impl RiscvDebugSequence for ESP32C2 {
         interface.write_word_32(0x6001_F068, 0)?;
 
         // Wait for the reset to take effect.
-        std::thread::sleep(Duration::from_millis(10));
+        loop {
+            let dmstatus = interface.read_dm_register::<Dmstatus>()?;
+            if dmstatus.allhavereset() && dmstatus.allhalted() {
+                break;
+            }
+        }
 
+        // Clear allhavereset and anyhavereset
         let mut dmcontrol = Dmcontrol(0);
         dmcontrol.set_dmactive(true);
         dmcontrol.set_ackhavereset(true);
         interface.write_dm_register(dmcontrol)?;
 
-        interface.enter_debug_mode()?;
-        self.on_connect(interface)?;
-
         interface.reset_hart_and_halt(timeout)?;
+
+        self.on_connect(interface)?;
 
         Ok(())
     }

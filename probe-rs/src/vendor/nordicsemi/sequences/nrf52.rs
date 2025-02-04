@@ -3,11 +3,10 @@
 use std::sync::Arc;
 
 use crate::architecture::arm::{
-    ap::MemoryAp,
     component::TraceSink,
     memory::CoresightComponent,
     sequences::{ArmDebugSequence, ArmDebugSequenceError},
-    ApAddress, ArmError, ArmProbeInterface, DpAddress,
+    ArmError, ArmProbeInterface, FullyQualifiedApAddress,
 };
 use crate::session::MissingPermissions;
 
@@ -41,7 +40,7 @@ impl Nrf52 {
     fn is_core_unlocked(
         &self,
         iface: &mut dyn ArmProbeInterface,
-        ctrl_ap: ApAddress,
+        ctrl_ap: &FullyQualifiedApAddress,
     ) -> Result<bool, ArmError> {
         let status = iface.read_raw_ap_register(ctrl_ap, APPROTECTSTATUS)?;
         Ok(status != 0)
@@ -49,7 +48,7 @@ impl Nrf52 {
 }
 
 mod clock {
-    use crate::architecture::arm::{memory::adi_v5_memory_interface::ArmProbe, ArmError};
+    use crate::architecture::arm::{memory::ArmMemoryInterface, ArmError};
     use bitfield::bitfield;
 
     /// The base address of the DBGMCU component
@@ -71,13 +70,13 @@ mod clock {
         const ADDRESS: u64 = 0x55C;
 
         /// Read the control register from memory.
-        pub fn read(memory: &mut dyn ArmProbe) -> Result<Self, ArmError> {
+        pub fn read(memory: &mut dyn ArmMemoryInterface) -> Result<Self, ArmError> {
             let contents = memory.read_word_32(CLOCK + Self::ADDRESS)?;
             Ok(Self(contents))
         }
 
         /// Write the control register to memory.
-        pub fn write(&mut self, memory: &mut dyn ArmProbe) -> Result<(), ArmError> {
+        pub fn write(&mut self, memory: &mut dyn ArmMemoryInterface) -> Result<(), ArmError> {
             memory.write_word_32(CLOCK + Self::ADDRESS, self.0)
         }
     }
@@ -87,13 +86,10 @@ impl ArmDebugSequence for Nrf52 {
     fn debug_device_unlock(
         &self,
         iface: &mut dyn ArmProbeInterface,
-        _default_ap: MemoryAp,
+        _default_ap: &FullyQualifiedApAddress,
         permissions: &crate::Permissions,
     ) -> Result<(), ArmError> {
-        let ctrl_ap = ApAddress {
-            ap: 1,
-            dp: DpAddress::Default,
-        };
+        let ctrl_ap = &FullyQualifiedApAddress::v1_with_default_dp(1);
 
         tracing::info!("Checking if core is unlocked");
         if self.is_core_unlocked(iface, ctrl_ap)? {
@@ -155,7 +151,7 @@ impl ArmDebugSequence for Nrf52 {
             }
         };
 
-        let mut memory = interface.memory_interface(components[0].ap)?;
+        let mut memory = interface.memory_interface(&components[0].ap_address)?;
         let mut config = clock::TraceConfig::read(&mut *memory)?;
         config.set_traceportspeed(portspeed);
         if matches!(sink, TraceSink::Tpiu(_)) {

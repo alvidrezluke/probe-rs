@@ -1,26 +1,21 @@
-pub mod algorithm_binary;
-pub mod commands;
-pub mod fetch;
-pub mod flash_device;
-pub mod generate;
-pub mod parser;
-
 use anyhow::{ensure, Context, Result};
 use clap::Parser;
 use probe_rs_target::ChipFamily;
 use std::{
     env::current_dir,
     fs::create_dir,
+    num::ParseIntError,
     path::{Path, PathBuf},
 };
 use tracing_subscriber::{filter::LevelFilter, EnvFilter};
 
-use crate::commands::{
-    elf::{cmd_elf, serialize_to_yaml_string},
-    test::cmd_test,
+use target_gen::{
+    commands::{
+        elf::{cmd_elf, serialize_to_yaml_string},
+        test::cmd_test,
+    },
+    generate,
 };
-
-use core::num::ParseIntError;
 
 #[derive(clap::Parser)]
 enum TargetGen {
@@ -103,6 +98,12 @@ enum TargetGen {
         /// The address used as the start of flash memory area to perform test.
         #[clap(long = "test-address", value_parser = parse_u64)]
         test_start_sector_address: Option<u64>,
+        /// The name of the chip to use for the test, if there are multiple to choose from.
+        #[clap(long = "chip")]
+        chip: Option<String>,
+        /// Name of the flash algorithm to test
+        #[clap(long = "name", short = 'n')]
+        name: Option<String>,
     },
     /// Loads and updates target description from YAML files.
     Reformat {
@@ -155,11 +156,15 @@ async fn main() -> Result<()> {
             template_path,
             definition_export_path,
             test_start_sector_address,
+            chip,
+            name,
         } => cmd_test(
             target_artifact.as_path(),
             template_path.as_path(),
             definition_export_path.as_path(),
             test_start_sector_address,
+            chip,
+            name,
         )?,
         TargetGen::Reformat { yaml_path } => {
             if yaml_path.is_dir() {
@@ -171,7 +176,7 @@ async fn main() -> Result<()> {
                 for entry in entries {
                     let entry = entry.context("Failed to read directory entry.")?;
                     let path = entry.path();
-                    if path.extension().map_or(false, |ext| ext == "yaml") {
+                    if path.extension().is_some_and(|ext| ext == "yaml") {
                         refresh_yaml(&path)?;
                     }
                 }
@@ -230,7 +235,7 @@ fn cmd_pack(input: &Path, out_dir: &Path) -> Result<()> {
 /// Generated target descriptions will be placed in `out_dir`.
 async fn cmd_arm(out_dir: Option<PathBuf>, chip_family: Option<String>, list: bool) -> Result<()> {
     if list {
-        let mut packs = crate::fetch::get_vidx().await?;
+        let mut packs = target_gen::fetch::get_vidx().await?;
         println!("Available ARM CMSIS Pack files:");
         packs.pdsc_index.sort_by(|a, b| a.name.cmp(&b.name));
         for pack in packs.pdsc_index.iter() {

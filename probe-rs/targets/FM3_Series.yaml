@@ -1,4 +1,7 @@
 name: FM3 High Performance Series
+manufacturer:
+  id: 0x41
+  cc: 0x0
 generated_from_pack: true
 pack_file_release: 1.2.1
 variants:
@@ -7,9 +10,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -22,14 +33,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20002000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -39,9 +42,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -56,14 +67,6 @@ variants:
       end: 0x20002000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
   - mb9bfx02_128
 - name: MB9BF104N
@@ -71,9 +74,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -88,24 +99,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF104R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -120,24 +131,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF105N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -152,24 +163,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF105R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -184,24 +195,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF106N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -216,24 +227,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF106R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -248,24 +259,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF112N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -285,14 +296,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -303,9 +306,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -325,14 +336,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -343,9 +346,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -367,25 +378,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF114R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -407,25 +418,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF115N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -447,25 +458,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF115R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -487,25 +498,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF116N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -527,25 +538,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF116R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -567,25 +578,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF116S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -600,24 +611,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF116T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -632,24 +643,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF117S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -664,24 +675,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF117T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -696,24 +707,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF118S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -726,14 +737,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -743,9 +746,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -758,14 +769,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -775,9 +778,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -792,24 +803,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF216T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -824,24 +835,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF217S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -856,24 +867,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF217T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -888,24 +899,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF218S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -918,14 +929,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -935,9 +938,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -952,14 +963,6 @@ variants:
       end: 0x20010000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
   - mb9bfx08_1024
 - name: MB9BF304N
@@ -967,9 +970,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -984,24 +995,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF304R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1016,24 +1027,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF305N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1048,24 +1059,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF305R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1080,24 +1091,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF306N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1112,24 +1123,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF306R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1144,24 +1155,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF312N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1181,14 +1192,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -1199,9 +1202,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1221,14 +1232,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -1239,9 +1242,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1263,25 +1274,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF314R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1303,25 +1314,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF315N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1343,25 +1354,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF315R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1383,25 +1394,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF316N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1423,25 +1434,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF316R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1463,25 +1474,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF316S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1496,24 +1507,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF316T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1528,24 +1539,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF317S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1560,24 +1571,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF317T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1592,24 +1603,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF318S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1622,14 +1633,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -1639,9 +1642,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1656,14 +1667,6 @@ variants:
       end: 0x20010000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
   - mb9bfx08_1024
 - name: MB9BF404N
@@ -1671,9 +1674,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1688,24 +1699,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF404R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1720,24 +1731,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF405N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1752,24 +1763,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF405R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1784,24 +1795,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF406N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1816,24 +1827,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF406R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1848,24 +1859,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF412N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1885,14 +1896,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -1903,9 +1906,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1925,14 +1936,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -1943,9 +1946,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -1967,25 +1978,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF414R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2007,25 +2018,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF415N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2047,25 +2058,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF415R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2087,25 +2098,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF416N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2127,25 +2138,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF416R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2167,25 +2178,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF416S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2200,24 +2211,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF416T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2232,24 +2243,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF417S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2264,24 +2275,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF417T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2296,24 +2307,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF418S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2326,14 +2337,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -2343,9 +2346,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2360,14 +2371,6 @@ variants:
       end: 0x20010000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
   - mb9bfx08_1024
 - name: MB9BF500N
@@ -2375,9 +2378,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2390,14 +2401,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20004000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -2407,9 +2410,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2422,14 +2433,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20004000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -2439,9 +2442,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2456,24 +2467,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF504R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2488,24 +2499,24 @@ variants:
       end: 0x20004000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
 - name: MB9BF505N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2520,24 +2531,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF505R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2552,24 +2563,24 @@ variants:
       end: 0x20006000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
 - name: MB9BF506N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2584,24 +2595,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF506R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2616,24 +2627,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF512N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2653,14 +2664,6 @@ variants:
     range:
       start: 0x200c0000
       end: 0x200c8000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -2671,9 +2674,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x20000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2695,14 +2706,6 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x20000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
   - mb9bfx02_128
   - mb9xfxxx_32wf
@@ -2711,9 +2714,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2735,25 +2746,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF514R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x40000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2775,25 +2786,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx04_256
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF515N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2815,25 +2826,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF515R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x60000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2855,25 +2866,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x60000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx05_384
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF516N
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2895,25 +2906,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF516R
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2935,25 +2946,25 @@ variants:
       end: 0x200c8000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
   - mb9xfxxx_32wf
 - name: MB9BF516S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -2968,24 +2979,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF516T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3000,24 +3011,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF517S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3032,24 +3043,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF517T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3064,24 +3075,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF518S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3094,14 +3105,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3111,9 +3114,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3126,14 +3137,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3143,9 +3146,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3160,24 +3171,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF616T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3192,24 +3203,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BF617S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3224,24 +3235,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF617T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3256,24 +3267,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BF618S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3286,14 +3297,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3303,9 +3306,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3318,14 +3329,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3335,9 +3338,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3352,24 +3363,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BFD16T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x80000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3384,24 +3395,24 @@ variants:
       end: 0x20008000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx06_512
+  - mb9bfx08_1024
 - name: MB9BFD17S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3416,24 +3427,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BFD17T
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0xc0000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3448,24 +3459,24 @@ variants:
       end: 0x2000c000
     cores:
     - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0xc0000
-    is_boot_memory: true
-    cores:
-    - main
   flash_algorithms:
-  - mb9bfx07_768
+  - mb9bfx08_1024
 - name: MB9BFD18S
   cores:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3478,14 +3489,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3495,9 +3498,17 @@ variants:
   - name: main
     type: armv7m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
+  - !Nvm
+    name: IROM1
+    range:
+      start: 0x0
+      end: 0x100000
+    cores:
+    - main
+    access:
+      boot: true
   - !Ram
     name: IRAM2
     range:
@@ -3510,14 +3521,6 @@ variants:
     range:
       start: 0x20000000
       end: 0x20010000
-    cores:
-    - main
-  - !Nvm
-    name: IROM1
-    range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
     cores:
     - main
   flash_algorithms:
@@ -3545,8 +3548,8 @@ flash_algorithms:
       address: 0x0
     - size: 0x18000
       address: 0x8000
-- name: mb9bfx04_256
-  description: MB9xFxx4 256kB Flash
+- name: mb9bfx08_1024
+  description: MB9xFxx8 1024kB Flash
   default: true
   instructions: AUYIiGFLS0QYYBhGAHhABsIPAL8IiF1LS0QYYBhGAHhABsAPkEIB0QAgcEdXSEhEAHhABsIPVUhIRAB4gAbAD+jQCIhRS0tEGGAYRgB4QAbCDwiIGGAYRgB4QAbAD5BCAdEAIOHn8CAIgAEg3ecQtQNGR0hHTCBgwEMgYAAgRkygYEZISEQDYAAgEL0BRgAgcEcwtQRGASCBBwhggAcFaKogPklJRAloQgGJGAiCVSA6SUlECWhCAYkYCIGAIDdJSUQJaFIAiRgIgqogM0lJRAloiRgIglUgMElJRAloQgGJGAiBMCAggKCAAL8giCdJSUQIYAhGAHgAB8AP9tAgRv/3fv8AKAHQASAwvQIgQQcIYEAHBWgAIPfn+LUERg5GFUYBIIEHCGCABwBoAJAAJyDgqiAZSUlECWhCAYkYCIJVIBZJSUQJaEIBiRgIgaAgEklJRAloUgCJGAiCKIgggCBG//dN/wAoAdABIPi9rRykHH8ccBxACLhC2tgCIEEHCGBABwBoAJAAIO/nBAAAAFHlzBoAHAFAABABQAgAAAAAAAAAAAAAAAAAAAA=
   pc_init: 0x6f
@@ -3557,55 +3560,7 @@ flash_algorithms:
   flash_properties:
     address_range:
       start: 0x0
-      end: 0x40000
-    page_size: 0x400
-    erased_byte_value: 0xff
-    program_page_timeout: 100
-    erase_sector_timeout: 3000
-    sectors:
-    - size: 0x4000
-      address: 0x0
-    - size: 0x18000
-      address: 0x8000
-    - size: 0x20000
-      address: 0x20000
-- name: mb9bfx05_384
-  description: MB9xFxx5 384kB Flash
-  default: true
-  instructions: AUYIiGFLS0QYYBhGAHhABsIPAL8IiF1LS0QYYBhGAHhABsAPkEIB0QAgcEdXSEhEAHhABsIPVUhIRAB4gAbAD+jQCIhRS0tEGGAYRgB4QAbCDwiIGGAYRgB4QAbAD5BCAdEAIOHn8CAIgAEg3ecQtQNGR0hHTCBgwEMgYAAgRkygYEZISEQDYAAgEL0BRgAgcEcwtQRGASCBBwhggAcFaKogPklJRAloQgGJGAiCVSA6SUlECWhCAYkYCIGAIDdJSUQJaFIAiRgIgqogM0lJRAloiRgIglUgMElJRAloQgGJGAiBMCAggKCAAL8giCdJSUQIYAhGAHgAB8AP9tAgRv/3fv8AKAHQASAwvQIgQQcIYEAHBWgAIPfn+LUERg5GFUYBIIEHCGCABwBoAJAAJyDgqiAZSUlECWhCAYkYCIJVIBZJSUQJaEIBiRgIgaAgEklJRAloUgCJGAiCKIgggCBG//dN/wAoAdABIPi9rRykHH8ccBxACLhC2tgCIEEHCGBABwBoAJAAIO/nBAAAAFHlzBoAHAFAABABQAgAAAAAAAAAAAAAAAAAAAA=
-  pc_init: 0x6f
-  pc_uninit: 0x8d
-  pc_program_page: 0x11b
-  pc_erase_sector: 0x93
-  data_section_offset: 0x1a0
-  flash_properties:
-    address_range:
-      start: 0x0
-      end: 0x60000
-    page_size: 0x400
-    erased_byte_value: 0xff
-    program_page_timeout: 100
-    erase_sector_timeout: 3000
-    sectors:
-    - size: 0x4000
-      address: 0x0
-    - size: 0x18000
-      address: 0x8000
-    - size: 0x20000
-      address: 0x20000
-- name: mb9bfx06_512
-  description: MB9xFxx6 512kB Flash
-  default: true
-  instructions: AUYIiGFLS0QYYBhGAHhABsIPAL8IiF1LS0QYYBhGAHhABsAPkEIB0QAgcEdXSEhEAHhABsIPVUhIRAB4gAbAD+jQCIhRS0tEGGAYRgB4QAbCDwiIGGAYRgB4QAbAD5BCAdEAIOHn8CAIgAEg3ecQtQNGR0hHTCBgwEMgYAAgRkygYEZISEQDYAAgEL0BRgAgcEcwtQRGASCBBwhggAcFaKogPklJRAloQgGJGAiCVSA6SUlECWhCAYkYCIGAIDdJSUQJaFIAiRgIgqogM0lJRAloiRgIglUgMElJRAloQgGJGAiBMCAggKCAAL8giCdJSUQIYAhGAHgAB8AP9tAgRv/3fv8AKAHQASAwvQIgQQcIYEAHBWgAIPfn+LUERg5GFUYBIIEHCGCABwBoAJAAJyDgqiAZSUlECWhCAYkYCIJVIBZJSUQJaEIBiRgIgaAgEklJRAloUgCJGAiCKIgggCBG//dN/wAoAdABIPi9rRykHH8ccBxACLhC2tgCIEEHCGBABwBoAJAAIO/nBAAAAFHlzBoAHAFAABABQAgAAAAAAAAAAAAAAAAAAAA=
-  pc_init: 0x6f
-  pc_uninit: 0x8d
-  pc_program_page: 0x11b
-  pc_erase_sector: 0x93
-  data_section_offset: 0x1a0
-  flash_properties:
-    address_range:
-      start: 0x0
-      end: 0x80000
+      end: 0x100000
     page_size: 0x400
     erased_byte_value: 0xff
     program_page_timeout: 100
@@ -3637,54 +3592,6 @@ flash_algorithms:
     sectors:
     - size: 0x2000
       address: 0x0
-- name: mb9bfx07_768
-  description: MB9xFxx7 768kB Flash
-  default: true
-  instructions: AUYIiGFLS0QYYBhGAHhABsIPAL8IiF1LS0QYYBhGAHhABsAPkEIB0QAgcEdXSEhEAHhABsIPVUhIRAB4gAbAD+jQCIhRS0tEGGAYRgB4QAbCDwiIGGAYRgB4QAbAD5BCAdEAIOHn8CAIgAEg3ecQtQNGR0hHTCBgwEMgYAAgRkygYEZISEQDYAAgEL0BRgAgcEcwtQRGASCBBwhggAcFaKogPklJRAloQgGJGAiCVSA6SUlECWhCAYkYCIGAIDdJSUQJaFIAiRgIgqogM0lJRAloiRgIglUgMElJRAloQgGJGAiBMCAggKCAAL8giCdJSUQIYAhGAHgAB8AP9tAgRv/3fv8AKAHQASAwvQIgQQcIYEAHBWgAIPfn+LUERg5GFUYBIIEHCGCABwBoAJAAJyDgqiAZSUlECWhCAYkYCIJVIBZJSUQJaEIBiRgIgaAgEklJRAloUgCJGAiCKIgggCBG//dN/wAoAdABIPi9rRykHH8ccBxACLhC2tgCIEEHCGBABwBoAJAAIO/nBAAAAFHlzBoAHAFAABABQAgAAAAAAAAAAAAAAAAAAAA=
-  pc_init: 0x6f
-  pc_uninit: 0x8d
-  pc_program_page: 0x11b
-  pc_erase_sector: 0x93
-  data_section_offset: 0x1a0
-  flash_properties:
-    address_range:
-      start: 0x0
-      end: 0xc0000
-    page_size: 0x400
-    erased_byte_value: 0xff
-    program_page_timeout: 100
-    erase_sector_timeout: 3000
-    sectors:
-    - size: 0x4000
-      address: 0x0
-    - size: 0x18000
-      address: 0x8000
-    - size: 0x20000
-      address: 0x20000
-- name: mb9bfx08_1024
-  description: MB9xFxx8 1024kB Flash
-  default: true
-  instructions: AUYIiGFLS0QYYBhGAHhABsIPAL8IiF1LS0QYYBhGAHhABsAPkEIB0QAgcEdXSEhEAHhABsIPVUhIRAB4gAbAD+jQCIhRS0tEGGAYRgB4QAbCDwiIGGAYRgB4QAbAD5BCAdEAIOHn8CAIgAEg3ecQtQNGR0hHTCBgwEMgYAAgRkygYEZISEQDYAAgEL0BRgAgcEcwtQRGASCBBwhggAcFaKogPklJRAloQgGJGAiCVSA6SUlECWhCAYkYCIGAIDdJSUQJaFIAiRgIgqogM0lJRAloiRgIglUgMElJRAloQgGJGAiBMCAggKCAAL8giCdJSUQIYAhGAHgAB8AP9tAgRv/3fv8AKAHQASAwvQIgQQcIYEAHBWgAIPfn+LUERg5GFUYBIIEHCGCABwBoAJAAJyDgqiAZSUlECWhCAYkYCIJVIBZJSUQJaEIBiRgIgaAgEklJRAloUgCJGAiCKIgggCBG//dN/wAoAdABIPi9rRykHH8ccBxACLhC2tgCIEEHCGBABwBoAJAAIO/nBAAAAFHlzBoAHAFAABABQAgAAAAAAAAAAAAAAAAAAAA=
-  pc_init: 0x6f
-  pc_uninit: 0x8d
-  pc_program_page: 0x11b
-  pc_erase_sector: 0x93
-  data_section_offset: 0x1a0
-  flash_properties:
-    address_range:
-      start: 0x0
-      end: 0x100000
-    page_size: 0x400
-    erased_byte_value: 0xff
-    program_page_timeout: 100
-    erase_sector_timeout: 3000
-    sectors:
-    - size: 0x4000
-      address: 0x0
-    - size: 0x18000
-      address: 0x8000
-    - size: 0x20000
-      address: 0x20000
 - name: mb9bf500_256
   description: MB9BF500 256kB Flash
   default: true

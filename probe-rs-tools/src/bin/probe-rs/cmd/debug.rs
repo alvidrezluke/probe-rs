@@ -9,18 +9,17 @@ use capstone::{
 };
 use num_traits::Num;
 use parse_int::parse;
-use probe_rs::architecture::arm::ap::AccessPortError;
-use probe_rs::debug::stack_frame::StackFrameInfo;
-use probe_rs::exception_handler_for_core;
+use probe_rs::architecture::arm::ap_v1::AccessPortError;
 use probe_rs::flashing::FileDownloadError;
 use probe_rs::probe::list::Lister;
 use probe_rs::probe::DebugProbeError;
+use probe_rs::CoreDump;
 use probe_rs::CoreDumpError;
 use probe_rs::CoreInterface;
-use probe_rs::{
-    debug::{debug_info::DebugInfo, registers::DebugRegisters, stack_frame::StackFrame},
-    Core, CoreType, InstructionSet, MemoryInterface, RegisterValue,
-};
+use probe_rs::{Core, CoreType, InstructionSet, MemoryInterface, RegisterValue};
+use probe_rs_debug::exception_handler_for_core;
+use probe_rs_debug::stack_frame::StackFrameInfo;
+use probe_rs_debug::{debug_info::DebugInfo, registers::DebugRegisters, stack_frame::StackFrame};
 use rustyline::{error::ReadlineError, DefaultEditor};
 
 use crate::{util::common_options::ProbeOptions, CoreOptions};
@@ -277,7 +276,7 @@ impl DebugCli {
                                                 println!("-> configurable priority exception has been escalated to hard fault!");
 
 
-                                                // read cfsr 
+                                                // read cfsr
                                                 let cfsr = cli_data.core.read_word_32(0xE000_ED28)?;
 
                                                 let ufsr = (cfsr >> 16) & 0xffff;
@@ -588,34 +587,26 @@ impl DebugCli {
                                 println!();
 
                                 if let Some(location) = &frame.source_location {
-                                    if location.directory.is_some() || location.file.is_some() {
-                                        print!("       ");
+                                    print!("       ");
 
-                                        if let Some(dir) = &location.directory {
-                                            print!("{}", dir.to_path().display());
-                                        }
+                                    print!("{}", location.path.to_path().display());
 
-                                        if let Some(file) = &location.file {
-                                            print!("/{file}");
+                                    if let Some(line) = location.line {
+                                        print!(":{line}");
 
-                                            if let Some(line) = location.line {
-                                                print!(":{line}");
-
-                                                if let Some(col) = location.column {
-                                                    match col {
-                                                        probe_rs::debug::ColumnType::LeftEdge => {
-                                                            print!(":1")
-                                                        }
-                                                        probe_rs::debug::ColumnType::Column(c) => {
-                                                            print!(":{c}")
-                                                        }
-                                                    }
+                                        if let Some(col) = location.column {
+                                            match col {
+                                                probe_rs_debug::ColumnType::LeftEdge => {
+                                                    print!(":1")
+                                                }
+                                                probe_rs_debug::ColumnType::Column(c) => {
+                                                    print!(":{c}")
                                                 }
                                             }
                                         }
-
-                                        println!();
                                     }
+
+                                    println!();
                                 }
                             }
 
@@ -902,7 +893,7 @@ impl DebugCli {
 
                 println!("Dumping core");
 
-                cli_data.core.dump(ranges)?.store(location)?;
+                CoreDump::dump_core(&mut cli_data.core, ranges)?.store(location)?;
 
                 println!("Done.");
 
@@ -986,7 +977,7 @@ pub struct CliData<'p> {
 }
 
 impl<'p> CliData<'p> {
-    fn new(core: Core<'p>, debug_info: Option<DebugInfo>) -> Result<CliData, CliError> {
+    fn new(core: Core<'p>, debug_info: Option<DebugInfo>) -> Result<CliData<'p>, CliError> {
         let mut cli_data = CliData {
             core,
             debug_info,
@@ -1067,11 +1058,11 @@ struct HaltedState {
 }
 
 impl HaltedState {
-    fn get_current_frame(&self) -> Option<&probe_rs::debug::stack_frame::StackFrame> {
+    fn get_current_frame(&self) -> Option<&probe_rs_debug::stack_frame::StackFrame> {
         self.stack_frames.get(self.current_frame)
     }
 
-    fn get_current_frame_mut(&mut self) -> Option<&mut probe_rs::debug::stack_frame::StackFrame> {
+    fn get_current_frame_mut(&mut self) -> Option<&mut probe_rs_debug::stack_frame::StackFrame> {
         self.stack_frames.get_mut(self.current_frame)
     }
 }

@@ -26,9 +26,10 @@ impl TargetDescriptionXmlOverride for RuntimeTarget<'_> {
     ) -> gdbstub::target::TargetResult<usize, Self> {
         let annex = String::from_utf8_lossy(annex);
         if annex != "target.xml" {
-            return Err(TargetError::Fatal(
-                anyhow!("Unsupported annex: '{}'", annex).into(),
-            ));
+            return Err(TargetError::Fatal(anyhow!(
+                "Unsupported annex: '{}'",
+                annex
+            )));
         }
 
         let xml = self.target_desc.get_target_xml();
@@ -91,8 +92,8 @@ fn gdb_memory_map(session: &mut Session, primary_core_id: usize) -> Result<Strin
         let region_entry = format!(
             r#"<memory type="ram" start="0x0" length="{:#x}"/>\n"#,
             match address_size {
-                32 => 0xFFFF_FFFFu64,
-                64 => 0xFFFF_FFFF_FFFF_FFFF,
+                32 => u32::MAX as u64,
+                64 => u64::MAX,
                 _ => 0x0,
             }
         );

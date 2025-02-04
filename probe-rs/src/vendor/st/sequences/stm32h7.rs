@@ -5,15 +5,21 @@ use std::sync::Arc;
 use probe_rs_target::CoreType;
 
 use crate::architecture::arm::{
-    ap::MemoryAp,
     component::{TraceFunnel, TraceSink},
-    memory::{
-        adi_v5_memory_interface::ArmProbe, romtable::RomTableError, CoresightComponent,
-        PeripheralType,
-    },
+    memory::{romtable::RomTableError, ArmMemoryInterface, CoresightComponent, PeripheralType},
     sequences::ArmDebugSequence,
-    ApAddress, ArmError, ArmProbeInterface, DpAddress,
+    ArmError, ArmProbeInterface, FullyQualifiedApAddress,
 };
+
+/// Supported lines for custom sequences on STM32H7xx devices.
+#[derive(Debug)]
+pub enum Stm32h7Line {
+    /// STM32H72x, STM32H73x, STM32H74x, STM32H75x, STM32H7Ax, STM32H7Bx
+    H7,
+
+    /// STM32H7Rx, STM32H7Sx
+    H7S,
+}
 
 // Base address of the trace funnel that directs trace data to the SWO peripheral.
 const SWTF_BASE_ADDRESS: u64 = 0xE00E_4000;
@@ -37,18 +43,26 @@ enum TraceFunnelId {
 
 /// Marker struct indicating initialization sequencing for STM32H7 family parts.
 #[derive(Debug)]
-pub struct Stm32h7 {}
+pub struct Stm32h7 {
+    ap: u8,
+}
 
 impl Stm32h7 {
     /// Create the sequencer for the H7 family of parts.
-    pub fn create() -> Arc<Self> {
-        Arc::new(Self {})
+    pub fn create(family: Stm32h7Line) -> Arc<Self> {
+        let ap = match family {
+            // Most H7 variants have the debug unit on AP2.
+            Stm32h7Line::H7 => 2,
+            // The H7S/R lack power domain 3 and the third AP; their debug unit is on AP1.
+            Stm32h7Line::H7S => 1,
+        };
+        Arc::new(Self { ap })
     }
 
     /// Configure all debug components on the chip.
     pub fn enable_debug_components(
         &self,
-        memory: &mut dyn ArmProbe,
+        memory: &mut dyn ArmMemoryInterface,
         enable: bool,
     ) -> Result<(), ArmError> {
         if enable {
@@ -79,7 +93,8 @@ impl Stm32h7 {
 }
 
 mod dbgmcu {
-    use crate::architecture::arm::{memory::adi_v5_memory_interface::ArmProbe, ArmError};
+    use crate::architecture::arm::memory::ArmMemoryInterface;
+    use crate::architecture::arm::ArmError;
     use bitfield::bitfield;
 
     /// The base address of the DBGMCU component
@@ -105,13 +120,16 @@ mod dbgmcu {
         const ADDRESS: u64 = 0x04;
 
         /// Read the control register from memory.
-        pub fn read(memory: &mut (impl ArmProbe + ?Sized)) -> Result<Self, ArmError> {
+        pub fn read(memory: &mut (impl ArmMemoryInterface + ?Sized)) -> Result<Self, ArmError> {
             let contents = memory.read_word_32(DBGMCU + Self::ADDRESS)?;
             Ok(Self(contents))
         }
 
         /// Write the control register to memory.
-        pub fn write(&mut self, memory: &mut (impl ArmProbe + ?Sized)) -> Result<(), ArmError> {
+        pub fn write(
+            &mut self,
+            memory: &mut (impl ArmMemoryInterface + ?Sized),
+        ) -> Result<(), ArmError> {
             memory.write_word_32(DBGMCU + Self::ADDRESS, self.0)
         }
     }
@@ -149,14 +167,11 @@ impl ArmDebugSequence for Stm32h7 {
     fn debug_device_unlock(
         &self,
         interface: &mut dyn ArmProbeInterface,
-        _default_ap: MemoryAp,
+        _default_ap: &FullyQualifiedApAddress,
         _permissions: &crate::Permissions,
     ) -> Result<(), ArmError> {
-        // Power up the debug components through AP2, which is the default AP debug port.
-        let ap = MemoryAp::new(ApAddress {
-            dp: DpAddress::Default,
-            ap: 2,
-        });
+        // Power up the debug components through selected AP.
+        let ap = &FullyQualifiedApAddress::v1_with_default_dp(self.ap);
 
         let mut memory = interface.memory_interface(ap)?;
         self.enable_debug_components(&mut *memory, true)?;
@@ -166,10 +181,10 @@ impl ArmDebugSequence for Stm32h7 {
 
     fn debug_core_stop(
         &self,
-        memory: &mut dyn ArmProbe,
+        memory: &mut dyn ArmMemoryInterface,
         _core_type: CoreType,
     ) -> Result<(), ArmError> {
-        // Power down the debug components through AP2, which is the default AP debug port.
+        // Power down the debug components through selected AP.
 
         self.enable_debug_components(&mut *memory, false)?;
 

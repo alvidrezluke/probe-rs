@@ -1,15 +1,20 @@
-use super::{Core, MemoryRegion, RawFlashAlgorithm, RegistryError, TargetDescriptionSource};
-use crate::architecture::{
-    arm::{
-        ap::MemoryAp,
-        sequences::{ArmDebugSequence, DefaultArmSequence},
-        ApAddress, DpAddress,
-    },
-    riscv::sequences::{DefaultRiscvSequence, RiscvDebugSequence},
-    xtensa::sequences::{DefaultXtensaSequence, XtensaDebugSequence},
-};
+use super::{Core, MemoryRegion, RawFlashAlgorithm, TargetDescriptionSource};
 use crate::flashing::FlashLoader;
-use probe_rs_target::{Architecture, BinaryFormat, ChipFamily, Jtag, MemoryRange};
+use crate::{
+    architecture::{
+        arm::{
+            dp::DpAddress,
+            sequences::{ArmDebugSequence, DefaultArmSequence},
+            FullyQualifiedApAddress,
+        },
+        riscv::sequences::{DefaultRiscvSequence, RiscvDebugSequence},
+        xtensa::sequences::{DefaultXtensaSequence, XtensaDebugSequence},
+    },
+    rtt::ScanRegion,
+};
+use probe_rs_target::{
+    Architecture, Chip, ChipFamily, Jtag, MemoryAccess, MemoryRange as _, NvmRegion,
+};
 use std::sync::Arc;
 
 /// This describes a complete target with a fixed chip model and variant.
@@ -31,7 +36,7 @@ pub struct Target {
     ///
     /// Each region must be enclosed in exactly one RAM region from
     /// `memory_map`.
-    pub rtt_scan_regions: Vec<std::ops::Range<u64>>,
+    pub rtt_scan_regions: ScanRegion,
     /// The Description of the scan chain
     ///
     /// The scan chain can be parsed from the CMSIS-SDF file, or specified
@@ -39,7 +44,7 @@ pub struct Target {
     /// the number devices in the scan chain and their ir lengths.
     pub jtag: Option<Jtag>,
     /// The default executable format for the target.
-    pub default_format: BinaryFormat,
+    pub default_format: Option<String>,
 }
 
 impl std::fmt::Debug for Target {
@@ -56,43 +61,52 @@ impl std::fmt::Debug for Target {
     }
 }
 
-/// An error occurred while parsing the target description.
-pub type TargetParseError = serde_yaml::Error;
-
 impl Target {
     /// Create a new target for the given details.
     ///
-    /// We suggest never using this function directly.
-    /// Use [`crate::config::registry::get_target_by_name`] instead.
-    /// This will ensure that the used target is valid.
-    ///
-    /// The user has to make sure that all the cores have the same [`Architecture`].
-    /// In any case, this function will always just use the architecture of the first core in any further functionality.
-    /// In practice we have never encountered a [`Chip`] with mixed architectures so this should not be of issue.
-    ///
-    /// Furthermore, the user has to ensure that any [`Core`] in `flash_algorithms[n].cores` is present in `cores` as well.
-    pub(crate) fn new(
-        family: &ChipFamily,
-        chip_name: impl AsRef<str>,
-    ) -> Result<Target, RegistryError> {
-        // Make sure we are given a valid family:
-        family
-            .validate()
-            .map_err(|e| RegistryError::InvalidChipFamilyDefinition(Box::new(family.clone()), e))?;
-
-        let chip = family
-            .variants
-            .iter()
-            .find(|chip| chip.name == chip_name.as_ref())
-            .ok_or_else(|| RegistryError::ChipNotFound(chip_name.as_ref().to_string()))?;
-
+    /// The given chip must be a member of the given family.
+    pub(super) fn new(family: &ChipFamily, chip: &Chip) -> Target {
+        let mut memory_map = chip.memory_map.clone();
         let mut flash_algorithms = Vec::new();
         for algo_name in chip.flash_algorithms.iter() {
-            let algo = family.get_algorithm(algo_name).expect(
-                "The required flash algorithm was not found. This is a bug. Please report it.",
-            );
+            let algo = family
+                .get_algorithm_for_chip(algo_name, chip)
+                .expect(
+                    "The required flash algorithm was not found. This is a bug. Please report it.",
+                )
+                .clone();
 
-            flash_algorithms.push(algo.clone());
+            // If the flash algorithm addresses a range that is not covered by any memory region,
+            // we add a new memory region for it. This is usually the case for option bytes and
+            // some OTP memory regions in certain CMSIS packs.
+            let algo_range = &algo.flash_properties.address_range;
+            if !memory_map
+                .iter()
+                .any(|region| region.address_range().intersects_range(algo_range))
+            {
+                // HACK (doubly, even):
+                // Conjure up a memory region for the flash algorithm. This is mostly used by
+                // EEPROM regions. We probably don't want to erase these regions, so we set
+                // `is_alias`, which then causes "erase all" to skip the region.
+                memory_map.push(MemoryRegion::Nvm(NvmRegion {
+                    name: Some(format!("synthesized for {algo_name}")),
+                    range: algo_range.clone(),
+                    cores: if algo.cores.is_empty() {
+                        chip.cores.iter().map(|core| core.name.clone()).collect()
+                    } else {
+                        algo.cores.clone()
+                    },
+                    is_alias: true,
+                    access: Some(MemoryAccess {
+                        read: false,
+                        write: false,
+                        execute: false,
+                        boot: false,
+                    }),
+                }));
+            }
+
+            flash_algorithms.push(algo);
         }
 
         let debug_sequence = crate::vendor::try_create_debug_sequence(chip).unwrap_or_else(|| {
@@ -107,41 +121,22 @@ impl Target {
 
         tracing::info!("Using sequence {:?}", debug_sequence);
 
-        let ram_regions = chip
-            .memory_map
-            .iter()
-            .filter_map(MemoryRegion::as_ram_region);
         let rtt_scan_regions = match &chip.rtt_scan_ranges {
-            Some(ranges) => {
-                // The custom ranges must all be enclosed by exactly one of
-                // the defined RAM regions.
-                for rng in ranges {
-                    if !ram_regions
-                        .clone()
-                        .any(|region| region.range.contains_range(rng))
-                    {
-                        return Err(RegistryError::InvalidRttScanRange(rng.clone()));
-                    }
-                }
-                ranges.clone()
-            }
-            None => {
-                // By default we use all of the RAM ranges from the memory map.
-                ram_regions.map(|region| region.range.clone()).collect()
-            }
+            Some(ranges) => ScanRegion::Ranges(ranges.clone()),
+            None => ScanRegion::Ram, // By default we use all of the RAM ranges from the memory map.
         };
 
-        Ok(Target {
+        Target {
             name: chip.name.clone(),
             cores: chip.cores.clone(),
             flash_algorithms,
             source: family.source.clone(),
-            memory_map: chip.memory_map.clone(),
+            memory_map,
             debug_sequence,
             rtt_scan_regions,
             jtag: chip.jtag.clone(),
-            default_format: chip.default_binary_format.clone().unwrap_or_default(),
-        })
+            default_format: chip.default_binary_format.clone(),
+        }
     }
 
     /// Get the architecture of the target
@@ -185,13 +180,20 @@ impl Target {
         self.flash_algorithms.iter().find(|a| a.name == name)
     }
 
-    /// Gets the core index from the core name
-    pub(crate) fn core_index_by_name(&self, name: &str) -> Option<usize> {
+    /// Returns the core index from the core name
+    pub fn core_index_by_name(&self, name: &str) -> Option<usize> {
         self.cores.iter().position(|c| c.name == name)
     }
 
-    /// Gets the first found [MemoryRegion] that contains the given address
-    pub(crate) fn get_memory_region_by_address(&self, address: u64) -> Option<&MemoryRegion> {
+    /// Returns the core index from the core name
+    pub fn core_index_by_address(&self, address: u64) -> Option<usize> {
+        let target_memory = self.memory_region_by_address(address)?;
+        let core_name = target_memory.cores().first()?;
+        self.core_index_by_name(core_name)
+    }
+
+    /// Returns the first found [MemoryRegion] that contains the given address
+    pub fn memory_region_by_address(&self, address: u64) -> Option<&MemoryRegion> {
         self.memory_map
             .iter()
             .find(|region| region.contains(address))
@@ -267,19 +269,26 @@ pub enum DebugSequence {
 pub(crate) trait CoreExt {
     // Retrieve the Coresight MemoryAP which should be used to
     // access the core, if available.
-    fn memory_ap(&self) -> Option<MemoryAp>;
+    fn memory_ap(&self) -> Option<FullyQualifiedApAddress>;
 }
 
 impl CoreExt for Core {
-    fn memory_ap(&self) -> Option<MemoryAp> {
+    fn memory_ap(&self) -> Option<FullyQualifiedApAddress> {
         match &self.core_access_options {
-            probe_rs_target::CoreAccessOptions::Arm(options) => Some(MemoryAp::new(ApAddress {
-                dp: match options.psel {
-                    0 => DpAddress::Default,
-                    x => DpAddress::Multidrop(x),
-                },
-                ap: options.ap,
-            })),
+            probe_rs_target::CoreAccessOptions::Arm(options) => {
+                let dp = match options.targetsel {
+                    None => DpAddress::Default,
+                    Some(x) => DpAddress::Multidrop(x),
+                };
+                Some(match &options.ap {
+                    probe_rs_target::ApAddress::V1(ap) => {
+                        FullyQualifiedApAddress::v1_with_dp(dp, *ap)
+                    }
+                    probe_rs_target::ApAddress::V2(ap) => {
+                        FullyQualifiedApAddress::v2_with_dp(dp, ap.as_slice().into())
+                    }
+                })
+            }
             probe_rs_target::CoreAccessOptions::Riscv(_) => None,
             probe_rs_target::CoreAccessOptions::Xtensa(_) => None,
         }

@@ -1,4 +1,7 @@
 name: PAC52XX Series
+manufacturer:
+  id: 0x6F
+  cc: 0xD
 generated_from_pack: true
 pack_file_release: 2.1.0
 variants:
@@ -7,22 +10,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -32,22 +35,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -57,22 +60,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -82,22 +85,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -107,22 +110,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -132,22 +135,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -157,22 +160,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -182,22 +185,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -207,22 +210,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -232,22 +235,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:
@@ -257,22 +260,22 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    name: IRAM1
-    range:
-      start: 0x20000000
-      end: 0x20002000
-    cores:
-    - main
   - !Nvm
     name: IROM1
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    name: IRAM1
+    range:
+      start: 0x20000000
+      end: 0x20002000
     cores:
     - main
   flash_algorithms:

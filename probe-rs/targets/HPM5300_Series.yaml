@@ -4,7 +4,7 @@ variants:
   cores:
   - name: core0
     type: riscv
-    core_access_options: !Riscv {}
+    core_access_options: !Riscv
   memory_map:
   - !Ram
     name: ILM0
@@ -20,19 +20,20 @@ variants:
       end: 0xa0000
     cores:
     - core0
-  - !Ram
-    name: AHB_SRAM
-    range:
-      start: 0xf0400000
-      end: 0xf0408000
-    cores:
-    - core0
   - !Nvm
     name: XPI0
     range:
       start: 0x80000000
       end: 0x80100000
-    is_boot_memory: true
+    cores:
+    - core0
+    access:
+      boot: true
+  - !Ram
+    name: AHB_SRAM
+    range:
+      start: 0xf0400000
+      end: 0xf0408000
     cores:
     - core0
   flash_algorithms:
@@ -41,7 +42,7 @@ variants:
   cores:
   - name: core0
     type: riscv
-    core_access_options: !Riscv {}
+    core_access_options: !Riscv
   memory_map:
   - !Ram
     name: ILM0
@@ -57,19 +58,20 @@ variants:
       end: 0xa0000
     cores:
     - core0
-  - !Ram
-    name: AHB_SRAM
-    range:
-      start: 0xf0400000
-      end: 0xf0408000
-    cores:
-    - core0
   - !Nvm
     name: XPI0
     range:
       start: 0x80000000
       end: 0x80100000
-    is_boot_memory: true
+    cores:
+    - core0
+    access:
+      boot: true
+  - !Ram
+    name: AHB_SRAM
+    range:
+      start: 0xf0400000
+      end: 0xf0408000
     cores:
     - core0
   flash_algorithms:
@@ -78,7 +80,7 @@ variants:
   cores:
   - name: core0
     type: riscv
-    core_access_options: !Riscv {}
+    core_access_options: !Riscv
   memory_map:
   - !Ram
     name: ILM0
@@ -94,19 +96,20 @@ variants:
       end: 0xa0000
     cores:
     - core0
-  - !Ram
-    name: AHB_SRAM
-    range:
-      start: 0xf0400000
-      end: 0xf0408000
-    cores:
-    - core0
   - !Nvm
     name: XPI0
     range:
       start: 0x80000000
       end: 0x80100000
-    is_boot_memory: true
+    cores:
+    - core0
+    access:
+      boot: true
+  - !Ram
+    name: AHB_SRAM
+    range:
+      start: 0xf0400000
+      end: 0xf0408000
     cores:
     - core0
   flash_algorithms:
@@ -115,7 +118,7 @@ variants:
   cores:
   - name: core0
     type: riscv
-    core_access_options: !Riscv {}
+    core_access_options: !Riscv
   memory_map:
   - !Ram
     name: ILM0
@@ -131,19 +134,20 @@ variants:
       end: 0xa0000
     cores:
     - core0
-  - !Ram
-    name: AHB_SRAM
-    range:
-      start: 0xf0400000
-      end: 0xf0408000
-    cores:
-    - core0
   - !Nvm
     name: XPI0
     range:
       start: 0x80000000
       end: 0x80100000
-    is_boot_memory: true
+    cores:
+    - core0
+    access:
+      boot: true
+  - !Ram
+    name: AHB_SRAM
+    range:
+      start: 0xf0400000
+      end: 0xf0408000
     cores:
     - core0
   flash_algorithms:
@@ -173,3 +177,4 @@ flash_algorithms:
       address: 0x0
   cores:
   - core0
+  stack_size: 1024

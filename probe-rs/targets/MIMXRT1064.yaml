@@ -8,18 +8,8 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Nvm
-    # Target internal QSPI flash.
-    name: FlexSPI2
-    range:
-      start: 0x70000000
-      end: 0x70400000
-    is_boot_memory: true
-    cores:
-    - main
   - !Ram
     name: OCRAM2
     range:
@@ -27,6 +17,15 @@ variants:
       end: 0x202c0000
     cores:
     - main
+  - !Nvm
+    name: FlexSPI2
+    range:
+      start: 0x70000000
+      end: 0x70400000
+    cores:
+    - main
+    access:
+      boot: true
   flash_algorithms:
   - mimxrt1064_qspi_4kb_sec
 flash_algorithms:
@@ -54,3 +53,4 @@ flash_algorithms:
       address: 0x0
   cores:
   - main
+  stack_size: 1024

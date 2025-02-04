@@ -22,12 +22,14 @@ restore_unwritten_bytes = false
 do_chip_erase = false
 # Whether to disable double buffering
 disable_double_buffering = false
+# Whether to verify flash contents before downloading
+preverify = false
 # Whether to verify flash contents after downloading
 verify = false
 
 [default.reset]
 # Whether or not the target should be reset.
-# When flashing is enabled as well, the target will be reset after flashing.
+# When flashing is enabled as well, the target will be reset after flashing regardless of this setting.
 enabled = true
 # Whether or not the target should be halted after reset.
 halt_afterwards = false

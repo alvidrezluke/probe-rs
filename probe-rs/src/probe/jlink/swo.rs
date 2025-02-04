@@ -8,7 +8,6 @@ use super::error::JlinkError;
 use super::interface::Interface;
 
 use std::{cmp, ops::Deref};
-use tracing::warn;
 
 type Result<T> = std::result::Result<T, JlinkError>;
 
@@ -56,7 +55,7 @@ impl SwoStatus {
     fn new(bits: u32) -> Self {
         let flags = bits & Self::ALL_MASK;
         if flags != bits {
-            warn!("Unknown SWO status flag bits: {:#010x}", bits);
+            tracing::warn!("Unknown SWO status flag bits: {:#010x}", bits);
         }
         Self(flags)
     }
@@ -69,7 +68,7 @@ pub struct SwoData<'a> {
     status: SwoStatus,
 }
 
-impl<'a> SwoData<'a> {
+impl SwoData<'_> {
     /// Returns whether the probe-internal buffer overflowed before the last read.
     ///
     /// This indicates that some device data was lost.
@@ -78,13 +77,13 @@ impl<'a> SwoData<'a> {
     }
 }
 
-impl<'a> AsRef<[u8]> for SwoData<'a> {
+impl AsRef<[u8]> for SwoData<'_> {
     fn as_ref(&self) -> &[u8] {
         self.data
     }
 }
 
-impl<'a> Deref for SwoData<'a> {
+impl Deref for SwoData<'_> {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
         self.data
@@ -251,7 +250,7 @@ impl JLink {
         };
 
         if status.contains(SwoStatus::OVERRUN) {
-            warn!("SWO probe buffer overrun");
+            tracing::warn!("SWO probe buffer overrun");
         }
 
         let buf = &mut data[..length];

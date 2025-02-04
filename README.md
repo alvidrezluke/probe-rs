@@ -62,15 +62,18 @@ The probe-rs website includes [VSCode configuration instructions](https://probe.
 
 ### Halting the attached chip
 
-```rust
-use probe_rs::{Permissions, Probe};
+```rust,no_run
+use probe_rs::probe::{list::Lister, Probe};
+use probe_rs::Permissions;
 
 fn main() -> Result<(), probe_rs::Error> {
     // Get a list of all available debug probes.
-    let probes = Probe::list_all();
+    let lister = Lister::new();
+
+    let probes = lister.list_all();
 
     // Use the first probe found.
-    let probe = probes[0].open()?;
+    let mut probe = probes[0].open()?;
 
     // Attach to a chip.
     let mut session = probe.attach("nRF52840_xxAA", Permissions::default())?;
@@ -79,7 +82,7 @@ fn main() -> Result<(), probe_rs::Error> {
     let mut core = session.core(0)?;
 
     // Halt the attached core.
-    core.halt(std::time::Duration::from_millis(300))?;
+    core.halt(std::time::Duration::from_millis(10))?;
 
     Ok(())
 }
@@ -87,7 +90,7 @@ fn main() -> Result<(), probe_rs::Error> {
 
 ### Reading from RAM
 
-```rust
+```rust,no_run
 use probe_rs::{MemoryInterface, Permissions, Session};
 
 fn main() -> Result<(), probe_rs::Error> {
@@ -152,6 +155,10 @@ Building requires Rust and Cargo which can be installed [using rustup](https://r
 
 Target files are generated using [target-gen](https://github.com/probe-rs/probe-rs/tree/master/target-gen) from CMSIS packs provided [here](https://developer.arm.com/tools-and-software/embedded/cmsis/cmsis-search).
 Generated files are then placed in `probe-rs/targets` for inclusion in the probe-rs project.
+
+### Updating STM32 targets
+
+STM32 memory region data has been proven unreliable on multiple occasions. We now rely on [stm32-data](https://github.com/embassy-rs/stm32-data/tree/main) for the correct values. Use target-gen to update the list of devices and their flash algorithms, then use the https://github.com/bugadani/stm-probers tool to regenerate memory maps for all STM32 devices.
 
 ### Writing new flash algorithms
 

@@ -2,21 +2,109 @@ name: nRF52 Series
 manufacturer:
   id: 0x44
   cc: 0x2
+chip_detection:
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52805
+  variants:
+    0x41414242: nRF52805_xxAA
+    0x41414230: nRF52805_xxAA
+    0x41414130: nRF52805_xxAA
+    0x41414330: nRF52805_xxAA
+    0x41414241: nRF52805_xxAA
+    0x41414231: nRF52805_xxAA
+    0x41414341: nRF52805_xxAA
+    0x41414141: nRF52805_xxAA
+    0x41414342: nRF52805_xxAA
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52810
+  variants:
+    0x41414342: nRF52810_xxAA
+    0x41414241: nRF52810_xxAA
+    0x41414341: nRF52810_xxAA
+    0x41414130: nRF52810_xxAA
+    0x41414242: nRF52810_xxAA
+    0x41414530: nRF52810_xxAA
+    0x41414141: nRF52810_xxAA
+    0x41414531: nRF52810_xxAA
+    0x41414330: nRF52810_xxAA
+    0x41414230: nRF52810_xxAA
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52811
+  variants:
+    0x41414242: nRF52811_xxAA
+    0x41414531: nRF52811_xxAA
+    0x41414342: nRF52811_xxAA
+    0x41414230: nRF52811_xxAA
+    0x41414141: nRF52811_xxAA
+    0x41414130: nRF52811_xxAA
+    0x41414530: nRF52811_xxAA
+    0x41414241: nRF52811_xxAA
+    0x41414341: nRF52811_xxAA
+    0x41414330: nRF52811_xxAA
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52832
+  variants:
+    0x41424730: nRF52832_xxAB
+    0x41414242: nRF52832_xxAA
+    0x41424230: nRF52832_xxAB
+    0x41424530: nRF52832_xxAB
+    0x41424742: nRF52832_xxAB
+    0x41414742: nRF52832_xxAA
+    0x41414230: nRF52832_xxAA
+    0x41414241: nRF52832_xxAA
+    0x41414143: nRF52832_xxAA
+    0x41414530: nRF52832_xxAA
+    0x41414141: nRF52832_xxAA
+    0x41414730: nRF52832_xxAA
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52833
+  variants:
+    0x41414130: nRF52833_xxAA
+    0x41414131: nRF52833_xxAA
+    0x41414230: nRF52833_xxAA
+    0x41414142: nRF52833_xxAA
+    0x41414141: nRF52833_xxAA
+- !NordicFicrInfo
+  part_address: 0x10000100
+  variant_address: 0x10000104
+  part: 0x52840
+  variants:
+    0x41414541: nRF52840_xxAA
+    0x41414641: nRF52840_xxAA
+    0x41414430: nRF52840_xxAA
+    0x41414141: nRF52840_xxAA
+    0x41414530: nRF52840_xxAA
+    0x41414341: nRF52840_xxAA
+    0x41414431: nRF52840_xxAA
+    0x41414242: nRF52840_xxAA
+    0x41414441: nRF52840_xxAA
+    0x41414330: nRF52840_xxAA
 variants:
 - name: nRF52805_xxAA
   cores:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20006000
+      start: 0x0
+      end: 0x30000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -25,15 +113,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x30000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20006000
     cores:
     - main
   flash_algorithms:
@@ -43,15 +130,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20006000
+      start: 0x0
+      end: 0x30000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -60,15 +148,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x30000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20006000
     cores:
     - main
   flash_algorithms:
@@ -78,15 +165,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20006000
+      start: 0x0
+      end: 0x30000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -95,15 +183,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x30000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20006000
     cores:
     - main
   flash_algorithms:
@@ -113,15 +200,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20008000
+      start: 0x0
+      end: 0x40000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -130,15 +218,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x40000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20008000
     cores:
     - main
   flash_algorithms:
@@ -148,15 +235,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20010000
+      start: 0x0
+      end: 0x80000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -165,15 +253,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20010000
     cores:
     - main
   flash_algorithms:
@@ -183,15 +270,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20008000
+      start: 0x0
+      end: 0x100000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -200,15 +288,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20008000
     cores:
     - main
   flash_algorithms:
@@ -218,15 +305,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20020000
+      start: 0x0
+      end: 0x80000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -235,15 +323,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x80000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20020000
     cores:
     - main
   flash_algorithms:
@@ -253,15 +340,16 @@ variants:
   - name: main
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
+  - !Nvm
     range:
-      start: 0x20000000
-      end: 0x20040000
+      start: 0x0
+      end: 0x100000
     cores:
     - main
+    access:
+      boot: true
   - !Ram
     range:
       start: 0x800000
@@ -270,15 +358,14 @@ variants:
     - main
   - !Nvm
     range:
-      start: 0x0
-      end: 0x100000
-    is_boot_memory: true
-    cores:
-    - main
-  - !Nvm
-    range:
       start: 0x10001000
       end: 0x10002000
+    cores:
+    - main
+  - !Ram
+    range:
+      start: 0x20000000
+      end: 0x20040000
     cores:
     - main
   flash_algorithms:

@@ -1,16 +1,12 @@
 //! Sequences for ATSAM D1x/D2x/DAx/D5x/E5x target families
 
 use crate::{
-    architecture::{
-        self,
-        arm::{
-            ap::MemoryAp,
-            armv7m::Dhcsr,
-            communication_interface::{DapProbe, SwdSequence},
-            memory::adi_v5_memory_interface::ArmProbe,
-            sequences::{ArmDebugSequence, ArmDebugSequenceError, DebugEraseSequence},
-            ApAddress, ArmError, ArmProbeInterface, DpAddress, Pins,
-        },
+    architecture::arm::{
+        armv7m::Dhcsr,
+        communication_interface::{DapProbe, SwdSequence},
+        memory::ArmMemoryInterface,
+        sequences::{ArmDebugSequence, ArmDebugSequenceError, DebugEraseSequence},
+        ArmError, ArmProbeInterface, FullyQualifiedApAddress, Pins,
     },
     probe::DebugProbeError,
     session::MissingPermissions,
@@ -20,10 +16,9 @@ use bitfield::bitfield;
 use probe_rs_target::CoreType;
 use std::{
     sync::Arc,
+    thread,
     time::{Duration, Instant},
 };
-
-use anyhow::Result;
 
 bitfield! {
     /// Device Service Unit Control Register, DSU - CTRL
@@ -218,7 +213,7 @@ bitfield! {
     pub revision, _ : 11, 8;
 
     /// This bit field identifies a device within a product family and product series.
-    pub devsel, _ : 8, 0;
+    pub devsel, _ : 7, 0;
 }
 
 impl DsuDid {
@@ -246,7 +241,7 @@ impl<'a> From<&'a mut dyn DapProbe> for SwdSequenceShim<'a> {
     }
 }
 
-impl<'a> SwdSequence for SwdSequenceShim<'a> {
+impl SwdSequence for SwdSequenceShim<'_> {
     fn swj_sequence(&mut self, bit_len: u8, bits: u64) -> Result<(), DebugProbeError> {
         self.0.swj_sequence(bit_len, bits)
     }
@@ -282,7 +277,7 @@ impl AtSAM {
     /// to signal that a re-connect is needed for the DSU to start operating in unlocked mode.
     pub fn erase_all(
         &self,
-        memory: &mut dyn ArmProbe,
+        memory: &mut dyn ArmMemoryInterface,
         permissions: &Permissions,
     ) -> Result<(), ArmError> {
         let dsu_status_a = DsuStatusA::from(memory.read_word_8(DsuStatusA::ADDRESS)?);
@@ -312,11 +307,11 @@ impl AtSAM {
 
         // Wait for it to finish
         let start = Instant::now();
-        while start.elapsed() < Duration::from_secs(8) {
+        loop {
             let current_dsu_statusa = DsuStatusA::from(memory.read_word_8(DsuStatusA::ADDRESS)?);
             if current_dsu_statusa.done() {
                 tracing::info!("Chip-Erase complete");
-                let interface = memory.get_arm_communication_interface()?;
+                let interface = memory.get_swd_sequence()?;
 
                 // If the device was in Reset Extension when we started put it back into Reset Extension
                 let result = if dsu_status_a.crstext() {
@@ -333,11 +328,14 @@ impl AtSAM {
             } else if current_dsu_statusa.fail() {
                 return Err(ArmError::ChipEraseFailed);
             }
-            std::thread::sleep(Duration::from_millis(250));
-        }
 
-        tracing::error!("Chip-Erase failed to complete within 8 seconds");
-        Err(ArmError::Timeout)
+            if start.elapsed() >= Duration::from_secs(8) {
+                tracing::error!("Chip-Erase failed to complete within 8 seconds");
+                return Err(ArmError::Timeout);
+            }
+
+            thread::sleep(Duration::from_millis(250));
+        }
     }
 
     /// Perform a hardware reset in a way that puts the core into CPU Reset Extension
@@ -361,13 +359,13 @@ impl AtSAM {
         // First set nReset, SWDIO and SWCLK to low.
         let mut pin_values = Pins(0);
         interface.swj_pins(pin_values.0 as u32, pins.0 as u32, 0)?;
-        std::thread::sleep(Duration::from_millis(10));
+        thread::sleep(Duration::from_millis(10));
 
         // Next release nReset, but keep SWDIO and SWCLK low. This should put the device into
         // reset extension.
         pin_values.set_nreset(true);
         interface.swj_pins(pin_values.0 as u32, pins.0 as u32, 0)?;
-        std::thread::sleep(Duration::from_millis(20));
+        thread::sleep(Duration::from_millis(20));
 
         Ok(())
     }
@@ -378,7 +376,10 @@ impl AtSAM {
     ///
     /// # Errors
     /// Subject to probe communication errors
-    pub fn release_reset_extension(&self, memory: &mut dyn ArmProbe) -> Result<(), ArmError> {
+    pub fn release_reset_extension(
+        &self,
+        memory: &mut dyn ArmMemoryInterface,
+    ) -> Result<(), ArmError> {
         // Enable debug mode if it is not already enabled
         let mut dhcsr = Dhcsr(0);
         dhcsr.enable_write();
@@ -391,14 +392,16 @@ impl AtSAM {
         memory.write_8(DsuStatusA::ADDRESS, &[dsu_statusa.0])?;
 
         let start = Instant::now();
-        while start.elapsed() < Duration::from_millis(100) {
+        loop {
             let current_dsu_statusa = DsuStatusA::from(memory.read_word_8(DsuStatusA::ADDRESS)?);
             if !current_dsu_statusa.crstext() {
                 return Ok(());
             }
-        }
 
-        Err(ArmError::Timeout)
+            if start.elapsed() >= Duration::from_millis(100) {
+                return Err(ArmError::Timeout);
+            }
+        }
     }
 
     /// Perform a normal hardware reset without triggering a Reset extension
@@ -415,11 +418,11 @@ impl AtSAM {
 
         pin_values.set_nreset(false);
         interface.swj_pins(pin_values.0 as u32, pins.0 as u32, 0)?;
-        std::thread::sleep(Duration::from_millis(10));
+        thread::sleep(Duration::from_millis(10));
 
         pin_values.set_nreset(true);
         interface.swj_pins(pin_values.0 as u32, pins.0 as u32, 0)?;
-        std::thread::sleep(Duration::from_millis(10));
+        thread::sleep(Duration::from_millis(10));
 
         Ok(())
     }
@@ -442,10 +445,10 @@ impl AtSAM {
                 pins.set_nreset(true);
 
                 interface.swj_pins(0, pins.0 as u32, 0)?;
-                std::thread::sleep(Duration::from_millis(10));
+                thread::sleep(Duration::from_millis(10));
 
                 interface.swj_pins(pins.0 as u32, pins.0 as u32, 0)?;
-                std::thread::sleep(Duration::from_millis(10));
+                thread::sleep(Duration::from_millis(10));
 
                 Ok(())
             }
@@ -458,7 +461,7 @@ impl ArmDebugSequence for AtSAM {
     fn debug_core_start(
         &self,
         interface: &mut dyn ArmProbeInterface,
-        core_ap: MemoryAp,
+        core_ap: &FullyQualifiedApAddress,
         _core_type: CoreType,
         _debug_base: Option<u64>,
         _cti_base: Option<u64>,
@@ -483,11 +486,15 @@ impl ArmDebugSequence for AtSAM {
     ///
     /// Instead of de-asserting `nReset` here (this was already done during the CPU Reset Extension process),
     /// the device is released from Reset Extension.
-    fn reset_hardware_deassert(&self, memory: &mut dyn ArmProbe) -> Result<(), ArmError> {
+    fn reset_hardware_deassert(
+        &self,
+        probe: &mut dyn ArmProbeInterface,
+        default_ap: &FullyQualifiedApAddress,
+    ) -> Result<(), ArmError> {
         let mut pins = Pins(0);
         pins.set_nreset(true);
 
-        let current_pins = Pins(memory.swj_pins(pins.0 as u32, pins.0 as u32, 0)? as u8);
+        let current_pins = Pins(probe.swj_pins(pins.0 as u32, pins.0 as u32, 0)? as u8);
         if !current_pins.nreset() {
             return Err(ArmDebugSequenceError::SequenceSpecific(
                 "Expected nReset to already be de-asserted".into(),
@@ -495,7 +502,9 @@ impl ArmDebugSequence for AtSAM {
             .into());
         }
 
-        self.release_reset_extension(memory)
+        let mut memory = probe.memory_interface(default_ap)?;
+
+        self.release_reset_extension(memory.as_mut())
     }
 
     /// `debug_device_unlock` for ATSAM devices
@@ -511,7 +520,7 @@ impl ArmDebugSequence for AtSAM {
     fn debug_device_unlock(
         &self,
         interface: &mut dyn ArmProbeInterface,
-        default_ap: architecture::arm::ap::MemoryAp,
+        default_ap: &FullyQualifiedApAddress,
         permissions: &Permissions,
     ) -> Result<(), ArmError> {
         // First check if the device is locked
@@ -533,10 +542,7 @@ impl ArmDebugSequence for AtSAM {
 
 impl DebugEraseSequence for AtSAM {
     fn erase_all(&self, interface: &mut dyn ArmProbeInterface) -> Result<(), ArmError> {
-        let mem_ap = MemoryAp::new(ApAddress {
-            dp: DpAddress::Default,
-            ap: 0,
-        });
+        let mem_ap = &FullyQualifiedApAddress::v1_with_default_dp(0);
 
         let mut memory = interface.memory_interface(mem_ap)?;
 

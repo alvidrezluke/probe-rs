@@ -1,22 +1,32 @@
 #![allow(missing_docs)] // Don't require docs for test code
-use std::{cell::RefCell, collections::VecDeque, fmt::Debug, sync::Arc};
-
-use probe_rs_target::ScanChainElement;
-
 use crate::{
     architecture::arm::{
-        ap::{memory_ap::mock::MockMemoryAp, AccessPort, MemoryAp},
+        ap_v1::memory_ap::mock::MockMemoryAp,
         armv8m::Dhcsr,
         communication_interface::{
             ArmDebugState, Initialized, SwdSequence, Uninitialized, UninitializedArmProbe,
         },
-        memory::adi_v5_memory_interface::{ADIMemoryInterface, ArmProbe},
+        dp::{DpAddress, DpRegisterAddress},
+        memory::{ADIMemoryInterface, ArmMemoryInterface},
         sequences::ArmDebugSequence,
-        ApAddress, ArmError, ArmProbeInterface, DapAccess, DpAddress, MemoryApInformation,
-        PortType, RawDapAccess, SwoAccess,
+        ArmError, ArmProbeInterface, DapAccess, FullyQualifiedApAddress, RawDapAccess,
+        RegisterAddress, SwoAccess,
     },
     probe::{DebugProbe, DebugProbeError, Probe, WireProtocol},
-    Error, MemoryMappedRegister,
+    Error, MemoryInterface, MemoryMappedRegister,
+};
+use object::{
+    elf::{FileHeader32, FileHeader64, PT_LOAD},
+    read::elf::{ElfFile, FileHeader, ProgramHeader},
+    Endianness, Object, ObjectSection,
+};
+use probe_rs_target::{MemoryRange, ScanChainElement};
+use std::{
+    cell::RefCell,
+    collections::{BTreeSet, VecDeque},
+    fmt::Debug,
+    path::Path,
+    sync::Arc,
 };
 
 /// This is a mock probe which can be used for mocking things in tests or for dry runs.
@@ -26,10 +36,10 @@ pub struct FakeProbe {
     speed: u32,
     scan_chain: Option<Vec<ScanChainElement>>,
 
-    dap_register_read_handler: Option<Box<dyn Fn(PortType, u8) -> Result<u32, ArmError> + Send>>,
+    dap_register_read_handler: Option<Box<dyn Fn(RegisterAddress) -> Result<u32, ArmError> + Send>>,
 
     dap_register_write_handler:
-        Option<Box<dyn Fn(PortType, u8, u32) -> Result<(), ArmError> + Send>>,
+        Option<Box<dyn Fn(RegisterAddress, u32) -> Result<(), ArmError> + Send>>,
 
     operations: RefCell<VecDeque<Operation>>,
 
@@ -43,11 +53,33 @@ enum MockedAp {
     Core(MockCore),
 }
 
+struct LoadableSegment {
+    physical_address: u64,
+    offset: u64,
+    size: u64,
+}
+
+impl LoadableSegment {
+    fn contains(&self, physical_address: u64, len: u64) -> bool {
+        physical_address >= self.physical_address
+            && physical_address < (self.physical_address + self.size - len)
+    }
+
+    fn load_addr(&self, physical_address: u64) -> u64 {
+        let offset_in_segment = physical_address - self.physical_address;
+        self.offset + offset_in_segment
+    }
+}
+
 struct MockCore {
     dhcsr: Dhcsr,
 
     /// Is the core halted?
     is_halted: bool,
+
+    program_binary: Option<Vec<u8>>,
+    loadable_segments: Vec<LoadableSegment>,
+    endianness: Endianness,
 }
 
 impl MockCore {
@@ -55,6 +87,9 @@ impl MockCore {
         Self {
             dhcsr: Dhcsr(0),
             is_halted: false,
+            program_binary: None,
+            loadable_segments: Vec::new(),
+            endianness: Endianness::Little,
         }
     }
 }
@@ -74,9 +109,34 @@ impl SwdSequence for &mut MockCore {
     }
 }
 
-impl ArmProbe for &mut MockCore {
-    fn read_8(&mut self, _address: u64, _data: &mut [u8]) -> Result<(), ArmError> {
-        todo!()
+impl MemoryInterface<ArmError> for &mut MockCore {
+    fn read_8(&mut self, address: u64, data: &mut [u8]) -> Result<(), ArmError> {
+        let mut curr_seg: Option<&LoadableSegment> = None;
+
+        for (offset, val) in data.iter_mut().enumerate() {
+            let address = address + offset as u64;
+            println!("Read {:#010x} = 0", address);
+
+            match self.program_binary {
+                Some(ref program_binary) => {
+                    if !curr_seg.is_some_and(|seg| seg.contains(address, 1)) {
+                        curr_seg = self
+                            .loadable_segments
+                            .iter()
+                            .find(|&seg| seg.contains(address, 1));
+                    }
+                    match curr_seg {
+                        Some(seg) => {
+                            *val = program_binary[seg.load_addr(address) as usize];
+                        }
+                        None => *val = 0,
+                    }
+                }
+                None => *val = 0,
+            }
+        }
+
+        Ok(())
     }
 
     fn read_16(&mut self, _address: u64, _data: &mut [u16]) -> Result<(), ArmError> {
@@ -84,8 +144,11 @@ impl ArmProbe for &mut MockCore {
     }
 
     fn read_32(&mut self, address: u64, data: &mut [u32]) -> Result<(), ArmError> {
-        for (i, val) in data.iter_mut().enumerate() {
-            let address = address + (i as u64 * 4);
+        let mut curr_seg: Option<&LoadableSegment> = None;
+
+        for (offset, val) in data.iter_mut().enumerate() {
+            const U32_BYTES: usize = 4;
+            let address = address + (offset * U32_BYTES) as u64;
 
             match address {
                 // DHCSR
@@ -104,9 +167,38 @@ impl ArmProbe for &mut MockCore {
                     println!("Read  DHCSR: {:#x} = {:#x}", address, val);
                 }
 
-                _ => {
-                    *val = 0;
+                address => {
                     println!("Read {:#010x} = 0", address);
+
+                    match self.program_binary {
+                        Some(ref program_binary) => {
+                            if !curr_seg.is_some_and(|seg| seg.contains(address, U32_BYTES as u64))
+                            {
+                                curr_seg = self
+                                    .loadable_segments
+                                    .iter()
+                                    .find(|&seg| seg.contains(address, U32_BYTES as u64));
+                            }
+                            match curr_seg {
+                                Some(seg) => {
+                                    let from = seg.load_addr(address) as usize;
+                                    let to = from + U32_BYTES;
+
+                                    let u32_as_bytes: [u8; U32_BYTES] =
+                                        program_binary[from..to].try_into().unwrap();
+
+                                    // Convert to _host_ (native) endianness.
+                                    *val = if self.endianness == Endianness::Little {
+                                        u32::from_le_bytes(u32_as_bytes)
+                                    } else {
+                                        u32::from_be_bytes(u32_as_bytes)
+                                    };
+                                }
+                                None => *val = 0,
+                            }
+                        }
+                        None => *val = 0,
+                    }
                 }
             }
         }
@@ -172,17 +264,30 @@ impl ArmProbe for &mut MockCore {
     fn supports_8bit_transfers(&self) -> Result<bool, ArmError> {
         todo!()
     }
+}
 
-    fn ap(&mut self) -> MemoryAp {
+impl ArmMemoryInterface for &mut MockCore {
+    fn base_address(&mut self) -> Result<u64, ArmError> {
         todo!()
     }
 
-    fn get_arm_communication_interface(
-        &mut self,
-    ) -> Result<
-        &mut crate::architecture::arm::ArmCommunicationInterface<Initialized>,
-        DebugProbeError,
-    > {
+    fn fully_qualified_address(&self) -> FullyQualifiedApAddress {
+        todo!()
+    }
+
+    fn get_arm_probe_interface(&mut self) -> Result<&mut dyn ArmProbeInterface, DebugProbeError> {
+        todo!()
+    }
+
+    fn get_swd_sequence(&mut self) -> Result<&mut dyn SwdSequence, DebugProbeError> {
+        todo!()
+    }
+
+    fn get_dap_access(&mut self) -> Result<&mut dyn DapAccess, DebugProbeError> {
+        todo!()
+    }
+
+    fn generic_status(&mut self) -> Result<crate::architecture::arm::memory::Status, ArmError> {
         todo!()
     }
 
@@ -192,7 +297,7 @@ impl ArmProbe for &mut MockCore {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operation {
     ReadRawApRegister {
-        ap: ApAddress,
+        ap: FullyQualifiedApAddress,
         address: u8,
         result: u32,
     },
@@ -227,16 +332,35 @@ impl FakeProbe {
     /// Fake probe with a mocked core
     pub fn with_mocked_core() -> Self {
         FakeProbe {
-            protocol: WireProtocol::Swd,
-            speed: 1000,
-            scan_chain: None,
-
-            dap_register_read_handler: None,
-            dap_register_write_handler: None,
-
-            operations: RefCell::new(VecDeque::new()),
-
             memory_ap: MockedAp::Core(MockCore::new()),
+            ..Self::default()
+        }
+    }
+
+    /// Fake probe with a mocked core
+    /// with access to an actual binary file.
+    pub fn with_mocked_core_and_binary(program_binary: &Path) -> Self {
+        let file_data = std::fs::read(program_binary).unwrap().to_owned();
+        let file_data_slice = file_data.as_slice();
+
+        let file_kind = object::FileKind::parse(file_data.as_slice()).unwrap();
+        let core = match file_kind {
+            object::FileKind::Elf32 => core_with_binary(
+                object::read::elf::ElfFile::<FileHeader32<Endianness>>::parse(file_data_slice)
+                    .unwrap(),
+            ),
+            object::FileKind::Elf64 => core_with_binary(
+                object::read::elf::ElfFile::<FileHeader64<Endianness>>::parse(file_data_slice)
+                    .unwrap(),
+            ),
+            _ => {
+                unimplemented!("unsupported file format")
+            }
+        };
+
+        FakeProbe {
+            memory_ap: MockedAp::Core(core),
+            ..Self::default()
         }
     }
 
@@ -244,7 +368,7 @@ impl FakeProbe {
     /// Can be used to hook into the read.
     pub fn set_dap_register_read_handler(
         &mut self,
-        handler: Box<dyn Fn(PortType, u8) -> Result<u32, ArmError> + Send>,
+        handler: Box<dyn Fn(RegisterAddress) -> Result<u32, ArmError> + Send>,
     ) {
         self.dap_register_read_handler = Some(handler);
     }
@@ -253,7 +377,7 @@ impl FakeProbe {
     /// Can be used to hook into the write.
     pub fn set_dap_register_write_handler(
         &mut self,
-        handler: Box<dyn Fn(PortType, u8, u32) -> Result<(), ArmError> + Send>,
+        handler: Box<dyn Fn(RegisterAddress, u32) -> Result<(), ArmError> + Send>,
     ) {
         self.dap_register_write_handler = Some(handler);
     }
@@ -269,7 +393,7 @@ impl FakeProbe {
 
     fn read_raw_ap_register(
         &mut self,
-        expected_ap: ApAddress,
+        expected_ap: &FullyQualifiedApAddress,
         expected_address: u8,
     ) -> Result<u32, ArmError> {
         let operation = self.next_operation();
@@ -280,7 +404,7 @@ impl FakeProbe {
                 address,
                 result,
             }) => {
-                assert_eq!(ap, expected_ap);
+                assert_eq!(&ap, expected_ap);
                 assert_eq!(address, expected_address);
 
                 Ok(result)
@@ -293,6 +417,58 @@ impl FakeProbe {
     pub fn expect_operation(&self, operation: Operation) {
         self.operations.borrow_mut().push_back(operation);
     }
+}
+
+fn core_with_binary<T: FileHeader>(elf_file: ElfFile<T>) -> MockCore {
+    let elf_header = elf_file.elf_header();
+    let elf_data = elf_file.data();
+    let endian = elf_header.endian().unwrap();
+
+    let mut loadable_sections = Vec::new();
+    for segment in elf_header.program_headers(endian, elf_data).unwrap() {
+        let physical_address = segment.p_paddr(endian).into();
+        let segment_data = segment.data(endian, elf_data).unwrap();
+
+        if !segment_data.is_empty() && segment.p_type(endian) == PT_LOAD {
+            let (segment_offset, segment_filesize) = segment.file_range(endian);
+            let segment_range = segment_offset..segment_offset + segment_filesize;
+
+            let mut found_section_in_segment = false;
+
+            for section in elf_file.sections() {
+                let (section_offset, section_filesize) = match section.file_range() {
+                    Some(range) => range,
+                    None => continue,
+                };
+
+                if segment_range
+                    .contains_range(&(section_offset..section_offset + section_filesize))
+                {
+                    found_section_in_segment = true;
+                    break;
+                }
+            }
+
+            if found_section_in_segment {
+                loadable_sections.push(LoadableSegment {
+                    physical_address,
+                    offset: segment_offset,
+                    size: segment_filesize,
+                });
+            }
+        }
+    }
+
+    let mut core = MockCore::new();
+    core.program_binary = Some(elf_data.to_owned());
+    core.loadable_segments = loadable_sections;
+    core.endianness = if elf_header.is_little_endian() {
+        Endianness::Little
+    } else {
+        Endianness::Big
+    };
+
+    core
 }
 
 impl Default for FakeProbe {
@@ -319,9 +495,9 @@ impl DebugProbe for FakeProbe {
     fn scan_chain(&self) -> Result<&[ScanChainElement], DebugProbeError> {
         match &self.scan_chain {
             Some(chain) => Ok(chain),
-            None => Err(DebugProbeError::Other(anyhow::anyhow!(
-                "No scan chain set for fake probe"
-            ))),
+            None => Err(DebugProbeError::Other(
+                "No scan chain set for fake probe".to_string(),
+            )),
         }
     }
 
@@ -383,17 +559,17 @@ impl DebugProbe for FakeProbe {
 
 impl RawDapAccess for FakeProbe {
     /// Reads the DAP register on the specified port and address
-    fn raw_read_register(&mut self, port: PortType, addr: u8) -> Result<u32, ArmError> {
+    fn raw_read_register(&mut self, address: RegisterAddress) -> Result<u32, ArmError> {
         let handler = self.dap_register_read_handler.as_ref().unwrap();
 
-        handler(port, addr)
+        handler(address)
     }
 
     /// Writes a value to the DAP register on the specified port and address
-    fn raw_write_register(&mut self, port: PortType, addr: u8, value: u32) -> Result<(), ArmError> {
+    fn raw_write_register(&mut self, address: RegisterAddress, value: u32) -> Result<(), ArmError> {
         let handler = self.dap_register_write_handler.as_ref().unwrap();
 
-        handler(port, addr, value)
+        handler(address, value)
     }
 
     fn jtag_sequence(&mut self, _cycles: u8, _tms: bool, _tdi: u64) -> Result<(), DebugProbeError> {
@@ -480,25 +656,22 @@ impl UninitializedArmProbe for FakeArmInterface<Uninitialized> {
     }
 }
 
+impl crate::architecture::arm::communication_interface::FlushableArmAccess
+    for FakeArmInterface<Initialized>
+{
+    fn flush(&mut self) -> Result<(), ArmError> {
+        todo!()
+    }
+}
+
 impl ArmProbeInterface for FakeArmInterface<Initialized> {
     fn memory_interface(
         &mut self,
-        access_port: MemoryAp,
-    ) -> Result<Box<dyn ArmProbe + '_>, ArmError> {
-        let ap_information = MemoryApInformation {
-            address: access_port.ap_address(),
-            supports_only_32bit_data_size: false,
-            debug_base_address: 0xf000_0000,
-            supports_hnonsec: false,
-            has_large_data_extension: false,
-            has_large_address_extension: false,
-            device_enabled: true,
-        };
-
+        access_port_address: &FullyQualifiedApAddress,
+    ) -> Result<Box<dyn ArmMemoryInterface + '_>, ArmError> {
         match self.probe.memory_ap {
-            MockedAp::MemoryAp(ref mut memory_ap) => {
-                let memory = ADIMemoryInterface::new(memory_ap, ap_information)
-                    .map_err(|e| ArmError::from_access_port(e, access_port))?;
+            MockedAp::MemoryAp(ref mut _memory_ap) => {
+                let memory = ADIMemoryInterface::new(self, access_port_address)?;
 
                 Ok(Box::new(memory) as _)
             }
@@ -506,22 +679,11 @@ impl ArmProbeInterface for FakeArmInterface<Initialized> {
         }
     }
 
-    fn ap_information(
+    fn access_ports(
         &mut self,
-        _access_port: crate::architecture::arm::ap::GenericAp,
-    ) -> Result<&crate::architecture::arm::ApInformation, ArmError> {
-        todo!()
-    }
-
-    fn num_access_ports(&mut self, _dp: DpAddress) -> Result<usize, ArmError> {
-        Ok(1)
-    }
-
-    fn read_chip_info_from_rom_table(
-        &mut self,
-        _dp: DpAddress,
-    ) -> Result<Option<crate::architecture::arm::ArmChipInfo>, ArmError> {
-        Ok(None)
+        dp: DpAddress,
+    ) -> Result<BTreeSet<FullyQualifiedApAddress>, ArmError> {
+        Ok(BTreeSet::from([FullyQualifiedApAddress::v1_with_dp(dp, 1)]))
     }
 
     fn close(self: Box<Self>) -> Probe {
@@ -530,6 +692,10 @@ impl ArmProbeInterface for FakeArmInterface<Initialized> {
 
     fn current_debug_port(&self) -> DpAddress {
         self.state.current_dp
+    }
+
+    fn reinitialize(&mut self) -> Result<(), ArmError> {
+        Ok(())
     }
 }
 
@@ -551,26 +717,34 @@ impl SwoAccess for FakeArmInterface<Initialized> {
 }
 
 impl DapAccess for FakeArmInterface<Initialized> {
-    fn read_raw_dp_register(&mut self, _dp: DpAddress, _address: u8) -> Result<u32, ArmError> {
+    fn read_raw_dp_register(
+        &mut self,
+        _dp: DpAddress,
+        _address: DpRegisterAddress,
+    ) -> Result<u32, ArmError> {
         todo!()
     }
 
     fn write_raw_dp_register(
         &mut self,
         _dp: DpAddress,
-        _address: u8,
+        _address: DpRegisterAddress,
         _value: u32,
     ) -> Result<(), ArmError> {
         todo!()
     }
 
-    fn read_raw_ap_register(&mut self, _ap: ApAddress, _address: u8) -> Result<u32, ArmError> {
+    fn read_raw_ap_register(
+        &mut self,
+        _ap: &FullyQualifiedApAddress,
+        _address: u8,
+    ) -> Result<u32, ArmError> {
         self.probe.read_raw_ap_register(_ap, _address)
     }
 
     fn read_raw_ap_register_repeated(
         &mut self,
-        _ap: ApAddress,
+        _ap: &FullyQualifiedApAddress,
         _address: u8,
         _values: &mut [u32],
     ) -> Result<(), ArmError> {
@@ -579,7 +753,7 @@ impl DapAccess for FakeArmInterface<Initialized> {
 
     fn write_raw_ap_register(
         &mut self,
-        _ap: ApAddress,
+        _ap: &FullyQualifiedApAddress,
         _address: u8,
         _value: u32,
     ) -> Result<(), ArmError> {
@@ -588,7 +762,7 @@ impl DapAccess for FakeArmInterface<Initialized> {
 
     fn write_raw_ap_register_repeated(
         &mut self,
-        _ap: ApAddress,
+        _ap: &FullyQualifiedApAddress,
         _address: u8,
         _values: &[u32],
     ) -> Result<(), ArmError> {
@@ -596,7 +770,7 @@ impl DapAccess for FakeArmInterface<Initialized> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "builtin-targets"))]
 mod test {
     use super::FakeProbe;
     use crate::Permissions;

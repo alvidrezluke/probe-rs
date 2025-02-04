@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 
 use super::memory::MemoryRegion;
-use crate::{
-    serialize::{hex_option, hex_u_int},
-    CoreType,
-};
+use crate::{serialize::hex_option, CoreType};
 use serde::{Deserialize, Serialize};
 
 /// Represents a DAP scan chain element.
@@ -16,15 +13,18 @@ pub struct ScanChainElement {
     pub ir_len: Option<u8>,
 }
 
-/// A finite list of all possible binary formats a target might support.
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum BinaryFormat {
-    /// Program sections are bit-for-bit copied to flash.
-    #[default]
-    Raw,
-    /// Program sections are copied to flash, with the relevant headers and metadata for the [ESP-IDF bootloader](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/app_image_format.html#app-image-structures).
-    Idf,
+/// Configuration for JTAG tunneling.
+///
+/// This JTAG tunnel wraps JTAG IR and DR accesses as DR access to a specific instruction. For
+/// example, this can be used to access a Risc-V core in an FPGA using the same JTAG cable that
+/// configures the FPGA.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RiscvJtagTunnel {
+    /// JTAG instruction used to tunnel
+    pub ir_id: u32,
+
+    /// Width of tunneled JTAG instruction register
+    pub ir_width: u32,
 }
 
 /// Configuration for JTAG probes.
@@ -35,6 +35,10 @@ pub struct Jtag {
     /// ref: `<https://open-cmsis-pack.github.io/Open-CMSIS-Pack-Spec/main/html/sdf_pg.html#sdf_element_scanchain>`
     #[serde(default)]
     pub scan_chain: Option<Vec<ScanChainElement>>,
+
+    /// Describes JTAG tunnel for Risc-V
+    #[serde(default)]
+    pub riscv_tunnel: Option<RiscvJtagTunnel>,
 }
 
 /// A single chip variant.
@@ -43,6 +47,7 @@ pub struct Jtag {
 /// the `nRF52832` chip has two variants, `nRF52832_xxAA` and `nRF52832_xxBB`. For this case,
 /// the struct will correspond to one of the variants, e.g. `nRF52832_xxAA`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Chip {
     /// This is the name of the chip in base form.
     /// E.g. `nRF52832`.
@@ -55,6 +60,11 @@ pub struct Chip {
     /// Documentation URLs associated with this chip.
     #[serde(default)]
     pub documentation: HashMap<String, url::Url>,
+    /// The package variants available for this chip.
+    ///
+    /// If empty, the chip is assumed to have only one package variant.
+    #[serde(default)]
+    pub package_variants: Vec<String>,
     /// The cores available on the chip.
     #[serde(default)]
     pub cores: Vec<Core>,
@@ -88,7 +98,9 @@ pub struct Chip {
     #[serde(default)]
     pub jtag: Option<Jtag>,
     /// The default binary format for this chip
-    pub default_binary_format: Option<BinaryFormat>,
+    // TODO: rename to default_platform
+    #[serde(default)]
+    pub default_binary_format: Option<String>,
 }
 
 impl Chip {
@@ -101,6 +113,7 @@ impl Chip {
             part: None,
             svd: None,
             documentation: HashMap::new(),
+            package_variants: vec![],
             cores: vec![Core {
                 name: "main".to_string(),
                 core_type,
@@ -110,8 +123,15 @@ impl Chip {
             flash_algorithms: vec![],
             rtt_scan_ranges: None,
             jtag: None,
-            default_binary_format: Some(BinaryFormat::Raw),
+            default_binary_format: None,
         }
+    }
+
+    /// Returns the package variants for this chip.
+    pub fn package_variants(&self) -> impl Iterator<Item = &String> {
+        std::slice::from_ref(&self.name)
+            .iter()
+            .chain(self.package_variants.iter())
     }
 }
 
@@ -141,14 +161,38 @@ pub enum CoreAccessOptions {
     Xtensa(XtensaCoreAccessOptions),
 }
 
+/// An address for AP accesses
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ApAddress {
+    /// References an address for an APv1 access, which is part of the ADIv5 specification.
+    #[serde(rename = "v1")]
+    V1(u8),
+    /// References an address for an APv2 access, which is part of the ADIv6 specification.
+    ///
+    /// # Note
+    /// This represents a chain of addresses within nested APs. In the case where there are no
+    /// nested APs, there will be a single entry in the vector with the address in the root AP.
+    ///
+    /// Entries preceeding the last entry should reference the AP base address to be used.
+    #[serde(rename = "v2")]
+    V2(Vec<u64>),
+}
+
+impl Default for ApAddress {
+    fn default() -> Self {
+        ApAddress::V1(0)
+    }
+}
+
 /// The data required to access an ARM core
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 pub struct ArmCoreAccessOptions {
     /// The access port number to access the core
-    pub ap: u8,
-    /// The port select number to access the core
-    #[serde(serialize_with = "hex_u_int")]
-    pub psel: u32,
+    pub ap: ApAddress,
+    /// The TARGETSEL value used to access the core
+    #[serde(serialize_with = "hex_option")]
+    pub targetsel: Option<u32>,
     /// The base address of the debug registers for the core.
     /// Required for Cortex-A, optional for Cortex-M
     #[serde(serialize_with = "hex_option")]
@@ -157,6 +201,9 @@ pub struct ArmCoreAccessOptions {
     /// Required in ARMv8-A
     #[serde(serialize_with = "hex_option")]
     pub cti_base: Option<u64>,
+
+    /// The JTAG TAP index of the core's debug module
+    pub jtag_tap: Option<usize>,
 }
 
 /// The data required to access a Risc-V core

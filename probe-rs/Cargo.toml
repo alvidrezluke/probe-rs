@@ -24,7 +24,7 @@ default = ["builtin-targets"]
 gdb-server = ["dep:gdbstub"]
 
 # Enable all built in targets.
-builtin-targets = []
+builtin-targets = ["dep:bincode", "dep:serde_yaml", "dep:probe-rs-target"]
 
 # Enable helpers for testing
 test = []
@@ -35,45 +35,37 @@ docsplay.workspace = true
 thiserror.workspace = true
 probe-rs-target.workspace = true
 
-bincode = "1"
-bitfield = "0.15"
+bincode = { version = "1", optional = true }
+bitfield = "0.18.0"
 bitvec = "1"
-gimli = { version = "0.30", default-features = false, features = [
-    "endian-reader",
-    "read",
-    "std",
-] }
 hidapi = { version = "2", default-features = false, features = [
     "linux-native",
 ] }
 ihex = "3.0"
-itertools = "0.13"
+itertools = "0.14"
 jep106 = "0.2"
-once_cell = "1"
-miniz_oxide = "0.7"
+flate2 = "1.0"
 object = { version = "0.36", default-features = false, features = [
     "elf",
     "read_core",
     "std",
 ] }
-nusb = "0.1.9"
+nusb = "0.1.12"
 futures-lite = { version = "2", default-features = false }
 async-io = "2"
 scroll = "0.12"
-svg = "0.17"
+serialport = { version = "4.6.0", default-features = false, features = [
+    "usbportinfo-interface",
+] }
+svg = "0.18"
 tracing = "0.1"
 uf2-decode = "0.2"
-typed-path = "0.9"
 espflash = { version = "3", default-features = false }
-dunce = "1"
-parse_int = "0.6"
 parking_lot = "0.12.2"
-zerocopy = "0.7.32"
-zerocopy-derive = "0.7.32"
+zerocopy = { version = "0.8.0", features = ["derive"] }
 
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
-rmp-serde = "1"
 
 # optional
 hexdump = { version = "0.1", optional = true }
@@ -81,11 +73,14 @@ hexdump = { version = "0.1", optional = true }
 # gdb server
 gdbstub = { version = "0.7", optional = true }
 
-[build-dependencies]
-probe-rs-target.workspace = true
+rmp-serde = { version = "1" }
+dunce = "1.0.5"
 
-bincode = "1"
-serde_yaml = "0.9"
+[build-dependencies]
+probe-rs-target = { workspace = true, optional = true }
+
+bincode = { version = "1", optional = true }
+serde_yaml = { version = "0.9", optional = true }
 
 [dev-dependencies]
 pretty_env_logger = "0.5"
@@ -96,8 +91,9 @@ clap = { version = "4", features = ["derive"] }
 itm = { version = "0.9.0-rc.1", default-features = false }
 pretty_assertions = "1"
 test-case = "3"
-termtree = "0.4"
-insta = { version = "1.38", default-features = false, features = ["yaml"] }
+test-log = { version = "0.2.16", features = ["trace"] }
+termtree = "0.5"
+insta = { version = "1.38", default-features = false }
 
 [[package.metadata.release.pre-release-replacements]]
 file = "../CHANGELOG.md"
@@ -107,3 +103,12 @@ replace = "## [{{version}}]\n\nReleased {{date}}"
 file = "../CHANGELOG.md"
 search = "\\[unreleased\\]: https://github.com/probe-rs/probe-rs/compare/v([a-z0-9.-]+)\\.\\.\\.master"
 replace = "[unreleased]: https://github.com/probe-rs/probe-rs/compare/v{{version}}...master\n[{{version}}]: https://github.com/probe-rs/probe-rs/compare/v$1...v{{version}}"
+
+[package.metadata.docs.rs]
+features = ["builtin-targets", "debug", "gdb-server"]
+
+# Define a new cfg flag for docs.rs
+rustdoc-args = ["--cfg", "probers_docsrs"]
+
+[lints]
+workspace = true

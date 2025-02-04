@@ -2,8 +2,6 @@
 
 use std::{sync::Arc, time::Duration};
 
-use probe_rs_target::Chip;
-
 use super::esp::EspFlashSizeDetector;
 use crate::{
     architecture::riscv::{
@@ -22,12 +20,13 @@ pub struct ESP32H2 {
 
 impl ESP32H2 {
     /// Creates a new debug sequence handle for the ESP32H2.
-    pub fn create(chip: &Chip) -> Arc<dyn RiscvDebugSequence> {
+    pub fn create() -> Arc<dyn RiscvDebugSequence> {
         Arc::new(Self {
             inner: EspFlashSizeDetector {
-                stack_pointer: EspFlashSizeDetector::stack_pointer(chip),
-                load_address: 0, // Unused for RISC-V
+                stack_pointer: 0x40830000,
+                load_address: 0x40810000,
                 spiflash_peripheral: 0x6000_3000,
+                efuse_get_spiconfig_fn: None,
                 attach_fn: 0x4000_01D4,
             },
         })
@@ -37,11 +36,12 @@ impl ESP32H2 {
 impl RiscvDebugSequence for ESP32H2 {
     fn on_connect(&self, interface: &mut RiscvCommunicationInterface) -> Result<(), crate::Error> {
         tracing::info!("Disabling esp32h2 watchdogs...");
+
         // disable super wdt
-        interface.write_word_32(0x600B1C20, 0x50D83AA1)?; // write protection off
-        let current = interface.read_word_32(0x600B_1C1C)?;
-        interface.write_word_32(0x600B_1C1C, current | 1 << 18)?; // set RTC_CNTL_SWD_AUTO_FEED_EN
-        interface.write_word_32(0x600B1C20, 0x0)?; // write protection on
+        interface.write_word_32(0x600B1C24, 0x50D83AA1)?; // write protection off
+        let current = interface.read_word_32(0x600B1C20)?;
+        interface.write_word_32(0x600B1C20, current | 1 << 18)?; // set RTC_CNTL_SWD_AUTO_FEED_EN
+        interface.write_word_32(0x600B1C24, 0x0)?; // write protection on
 
         // tg0 wdg
         interface.write_word_32(0x6000_8064, 0x50D83AA1)?; // write protection off
@@ -54,9 +54,9 @@ impl RiscvDebugSequence for ESP32H2 {
         interface.write_word_32(0x6000_9064, 0x0)?; // write protection on
 
         // rtc wdg
-        interface.write_word_32(0x600B_1C18, 0x50D83AA1)?; // write protection off
+        interface.write_word_32(0x600B_1C1C, 0x50D83AA1)?; // write protection off
         interface.write_word_32(0x600B_1C00, 0x0)?;
-        interface.write_word_32(0x600B_1C18, 0x0)?; // write protection on
+        interface.write_word_32(0x600B_1C1C, 0x0)?; // write protection on
 
         Ok(())
     }

@@ -8,11 +8,9 @@ variants:
   - name: cm7
     type: armv7em
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
   - !Ram
-    # OCRAM1, OCRAM2, and the ECC extensions for each region.
     name: OCRAM
     range:
       start: 0x20240000
@@ -53,3 +51,4 @@ flash_algorithms:
       address: 0x0
   cores:
   - cm7
+  stack_size: 4096

@@ -8,20 +8,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000800
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000800
     cores:
     - main
   flash_algorithms:
@@ -31,20 +31,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000800
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000800
     cores:
     - main
   flash_algorithms:
@@ -54,20 +54,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000800
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000800
     cores:
     - main
   flash_algorithms:
@@ -77,20 +77,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000800
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000800
     cores:
     - main
   flash_algorithms:
@@ -100,20 +100,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -123,20 +123,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -146,20 +146,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -169,20 +169,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -192,20 +192,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000400
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x1000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000400
     cores:
     - main
   flash_algorithms:
@@ -215,20 +215,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10000800
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x2000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10000800
     cores:
     - main
   flash_algorithms:
@@ -238,20 +238,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -261,20 +261,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -284,20 +284,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -307,20 +307,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -330,20 +330,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -353,20 +353,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -376,20 +376,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -399,20 +399,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -422,20 +422,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x4000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -445,20 +445,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10001000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x8000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10001000
     cores:
     - main
   flash_algorithms:
@@ -468,20 +468,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -491,20 +491,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -514,20 +514,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -537,20 +537,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -560,20 +560,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10004000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10004000
     cores:
     - main
   flash_algorithms:
@@ -583,20 +583,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10004000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10004000
     cores:
     - main
   flash_algorithms:
@@ -606,20 +606,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10004000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10004000
     cores:
     - main
   flash_algorithms:
@@ -629,20 +629,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10004000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x10000
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10004000
     cores:
     - main
   flash_algorithms:
@@ -652,20 +652,20 @@ variants:
   - name: main
     type: armv6m
     core_access_options: !Arm
-      ap: 0
-      psel: 0x0
+      ap: !v1 0
   memory_map:
-  - !Ram
-    range:
-      start: 0x10000000
-      end: 0x10002000
-    cores:
-    - main
   - !Nvm
     range:
       start: 0x0
       end: 0x7800
-    is_boot_memory: true
+    cores:
+    - main
+    access:
+      boot: true
+  - !Ram
+    range:
+      start: 0x10000000
+      end: 0x10002000
     cores:
     - main
   flash_algorithms:
@@ -740,6 +740,7 @@ flash_algorithms:
       address: 0x0
   cores:
   - main
+  stack_size: 256
 - name: lpc8xx_16
   description: LPC8xx IAP 16kB Flash
   default: true

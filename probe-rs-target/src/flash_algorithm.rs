@@ -11,7 +11,7 @@ pub enum TransferEncoding {
     #[default]
     Raw,
 
-    /// Flash data is compressed using the `miniz_oxide` crate.
+    /// Zlib-compressed data, originally using the `miniz_oxide` crate.
     ///
     /// Compressed images are written in page sized chunks, each chunk written to the image's start
     /// address. The length of the compressed image is stored in the first 4 bytes of the first
@@ -26,6 +26,7 @@ pub enum TransferEncoding {
 /// a specific chip, by determining the RAM addresses which are used when flashing.
 /// This process is done in the main `probe-rs` library.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(deny_unknown_fields)]
 pub struct RawFlashAlgorithm {
     /// The name of the flash algorithm.
     pub name: String,
@@ -59,6 +60,12 @@ pub struct RawFlashAlgorithm {
     /// Address of the `EraseAll()` entry point. Optional.
     #[serde(serialize_with = "hex_option")]
     pub pc_erase_all: Option<u64>,
+    /// Address of the `Verify()` entry point. Optional.
+    #[serde(serialize_with = "hex_option")]
+    pub pc_verify: Option<u64>,
+    /// Address of the (non-standard) `ReadFlash()` entry point. Optional.
+    #[serde(serialize_with = "hex_option")]
+    pub pc_read: Option<u64>,
     /// The offset from the start of RAM to the data section.
     #[serde(serialize_with = "hex_u_int")]
     pub data_section_offset: u64,
@@ -80,9 +87,20 @@ pub struct RawFlashAlgorithm {
     /// overruns during flashing.
     pub stack_size: Option<u32>,
 
+    /// Whether to check for stack overflows during flashing.
+    #[serde(default)]
+    pub stack_overflow_check: Option<bool>,
+
     /// The encoding format accepted by the flash algorithm.
     #[serde(default)]
     pub transfer_encoding: Option<TransferEncoding>,
+}
+
+impl RawFlashAlgorithm {
+    /// Whether to check for stack overflows during flashing.
+    pub fn stack_overflow_check(&self) -> bool {
+        self.stack_overflow_check.unwrap_or(true)
+    }
 }
 
 pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
@@ -125,7 +143,7 @@ impl Base64 {
         deserializer.deserialize_str(Base64)
     }
 }
-impl<'de> serde::de::Visitor<'de> for Base64 {
+impl serde::de::Visitor<'_> for Base64 {
     type Value = Vec<u8>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -158,7 +176,7 @@ impl Bytes {
         deserializer.deserialize_bytes(Bytes)
     }
 }
-impl<'de> serde::de::Visitor<'de> for Bytes {
+impl serde::de::Visitor<'_> for Bytes {
     type Value = Vec<u8>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

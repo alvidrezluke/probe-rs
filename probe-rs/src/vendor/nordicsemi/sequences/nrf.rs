@@ -2,11 +2,10 @@
 
 use crate::{
     architecture::arm::{
-        ap::MemoryAp,
-        communication_interface::Initialized,
-        memory::adi_v5_memory_interface::ArmProbe,
+        dp::DpAddress,
+        memory::ArmMemoryInterface,
         sequences::{ArmDebugSequence, ArmDebugSequenceError},
-        ApAddress, ArmCommunicationInterface, ArmError, ArmProbeInterface, DapAccess,
+        ArmError, ArmProbeInterface, FullyQualifiedApAddress,
     },
     session::MissingPermissions,
 };
@@ -14,14 +13,17 @@ use std::fmt::Debug;
 
 pub trait Nrf: Sync + Send + Debug {
     /// Returns the ahb_ap and ctrl_ap of every core
-    fn core_aps(&self, interface: &mut dyn ArmProbe) -> Vec<(ApAddress, ApAddress)>;
+    fn core_aps(
+        &self,
+        dp_address: &DpAddress,
+    ) -> Vec<(FullyQualifiedApAddress, FullyQualifiedApAddress)>;
 
     /// Returns true when the core is unlocked and false when it is locked.
     fn is_core_unlocked(
         &self,
-        arm_interface: &mut ArmCommunicationInterface<Initialized>,
-        ahb_ap_address: ApAddress,
-        ctrl_ap_address: ApAddress,
+        interface: &mut dyn ArmProbeInterface,
+        ahb_ap_address: &FullyQualifiedApAddress,
+        ctrl_ap_address: &FullyQualifiedApAddress,
     ) -> Result<bool, ArmError>;
 
     /// Returns true if a network core is present
@@ -41,8 +43,8 @@ const RELEASE_FORCEOFF: u32 = 0;
 /// Unlocks the core by performing an erase all procedure.
 /// The `ap_address` must be of the ctrl ap of the core.
 fn unlock_core(
-    arm_interface: &mut ArmCommunicationInterface<Initialized>,
-    ap_address: ApAddress,
+    arm_interface: &mut dyn ArmProbeInterface,
+    ap_address: &FullyQualifiedApAddress,
     permissions: &crate::Permissions,
 ) -> Result<(), ArmError> {
     permissions
@@ -57,7 +59,7 @@ fn unlock_core(
 }
 
 /// Sets the network core to active running.
-fn set_network_core_running(interface: &mut dyn ArmProbe) -> Result<(), ArmError> {
+fn set_network_core_running(interface: &mut dyn ArmMemoryInterface) -> Result<(), ArmError> {
     // Determine if the RESET peripheral is mapped to secure or non-secure address space.
     let periph_config_address = APPLICATION_SPU_PERIPH_PERM + 0x4 * APPLICATION_RESET_PERIPH_ID;
     let periph_config = interface.read_word_32(periph_config_address)?;
@@ -79,24 +81,18 @@ impl<T: Nrf> ArmDebugSequence for T {
     fn debug_device_unlock(
         &self,
         interface: &mut dyn ArmProbeInterface,
-        default_ap: MemoryAp,
+        default_ap: &FullyQualifiedApAddress,
         permissions: &crate::Permissions,
     ) -> Result<(), ArmError> {
-        let mut interface = interface.memory_interface(default_ap)?;
+        let aps = self.core_aps(&default_ap.dp());
 
         // TODO: Eraseprotect is not considered. If enabled, the debugger must set up the same keys as the firmware does
         // TODO: Approtect and Secure Approtect are not considered. If enabled, the debugger must set up the same keys as the firmware does
         // These keys should be queried from the user if required and once that mechanism is implemented
 
-        for (core_index, (core_ahb_ap_address, core_ctrl_ap_address)) in
-            self.core_aps(&mut *interface).iter().copied().enumerate()
-        {
+        for (core_index, (core_ahb_ap_address, core_ctrl_ap_address)) in aps.iter().enumerate() {
             tracing::info!("Checking if core {} is unlocked", core_index);
-            if self.is_core_unlocked(
-                interface.get_arm_communication_interface()?,
-                core_ahb_ap_address,
-                core_ctrl_ap_address,
-            )? {
+            if self.is_core_unlocked(interface, core_ahb_ap_address, core_ctrl_ap_address)? {
                 tracing::info!("Core {} is already unlocked", core_index);
                 continue;
             }
@@ -105,17 +101,9 @@ impl<T: Nrf> ArmDebugSequence for T {
                 "Core {} is locked. Erase procedure will be started to unlock it.",
                 core_index
             );
-            unlock_core(
-                interface.get_arm_communication_interface()?,
-                core_ctrl_ap_address,
-                permissions,
-            )?;
+            unlock_core(interface, core_ctrl_ap_address, permissions)?;
 
-            if !self.is_core_unlocked(
-                interface.get_arm_communication_interface()?,
-                core_ahb_ap_address,
-                core_ctrl_ap_address,
-            )? {
+            if !self.is_core_unlocked(interface, core_ahb_ap_address, core_ctrl_ap_address)? {
                 return Err(ArmDebugSequenceError::custom(format!(
                     "Could not unlock core {core_index}"
                 ))
@@ -124,11 +112,12 @@ impl<T: Nrf> ArmDebugSequence for T {
         }
 
         if self.has_network_core() {
+            let mut memory_interface = interface.memory_interface(default_ap)?;
             tracing::debug!("Setting network core to running");
-            set_network_core_running(&mut *interface)?;
-        }
+            set_network_core_running(&mut *memory_interface)?;
 
-        interface.flush()?;
+            memory_interface.flush()?;
+        }
 
         Ok(())
     }

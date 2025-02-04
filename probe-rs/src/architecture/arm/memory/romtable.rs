@@ -1,9 +1,12 @@
 //! CoreSight ROM table parsing and handling.
 
-use super::adi_v5_memory_interface::ArmProbe;
-use super::AccessPortError;
-use crate::architecture::arm::ArmError;
-use crate::architecture::arm::{ap::MemoryAp, communication_interface::ArmProbeInterface};
+use crate::architecture::arm::{
+    ap_v1::AccessPortError, communication_interface::ArmProbeInterface, memory::ArmMemoryInterface,
+    ArmError, FullyQualifiedApAddress,
+};
+
+/// The ARCHID associated with all CoreSight ROM tables.
+pub const CORESIGHT_ROM_TABLE_ARCHID: u16 = 0x0af7;
 
 /// An error to report any errors that are romtable discovery specific.
 #[derive(thiserror::Error, Debug, docsplay::Display)]
@@ -36,12 +39,12 @@ impl RomTableError {
 /// A lazy romtable reader that is used to create an iterator over all romtable entries.
 struct RomTableReader<'probe: 'memory, 'memory> {
     base_address: u64,
-    memory: &'memory mut (dyn ArmProbe + 'probe),
+    memory: &'memory mut (dyn ArmMemoryInterface + 'probe),
 }
 
 /// Iterates over a ROM table non recursively.
 impl<'probe: 'memory, 'memory> RomTableReader<'probe, 'memory> {
-    fn new(memory: &'memory mut (dyn ArmProbe + 'probe), base_address: u64) -> Self {
+    fn new(memory: &'memory mut (dyn ArmMemoryInterface + 'probe), base_address: u64) -> Self {
         RomTableReader {
             base_address,
             memory,
@@ -72,7 +75,7 @@ impl<'probe: 'memory, 'memory: 'reader, 'reader> RomTableIterator<'probe, 'memor
     }
 }
 
-impl<'probe, 'memory, 'reader> Iterator for RomTableIterator<'probe, 'memory, 'reader> {
+impl Iterator for RomTableIterator<'_, '_, '_> {
     type Item = Result<RomTableEntryRaw, RomTableError>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -81,24 +84,24 @@ impl<'probe, 'memory, 'reader> Iterator for RomTableIterator<'probe, 'memory, 'r
 
         self.offset += 4;
 
-        let mut entry_data = [0u32; 1];
+        let mut entry_data = 0u32;
 
         if let Err(e) = self
             .rom_table_reader
             .memory
-            .read_32(component_address, &mut entry_data)
+            .read_32(component_address, std::slice::from_mut(&mut entry_data))
         {
             return Some(Err(RomTableError::memory(e)));
         }
 
         // End of entries is marked by an all zero entry
-        if entry_data[0] == 0 {
+        if entry_data == 0 {
             tracing::debug!("Entry consists of all zeroes, stopping.");
             return None;
         }
 
         let entry_data =
-            RomTableEntryRaw::new(self.rom_table_reader.base_address as u32, entry_data[0]);
+            RomTableEntryRaw::new(self.rom_table_reader.base_address as u32, entry_data);
 
         tracing::debug!("ROM Table Entry: {:#x?}", entry_data);
         Some(Ok(entry_data))
@@ -118,7 +121,10 @@ impl RomTable {
     ///
     /// This does not check whether the data actually signalizes
     /// to contain a ROM table but assumes this was checked beforehand.
-    fn try_parse(memory: &mut dyn ArmProbe, base_address: u64) -> Result<RomTable, RomTableError> {
+    pub fn try_parse(
+        memory: &mut dyn ArmMemoryInterface,
+        base_address: u64,
+    ) -> Result<RomTable, RomTableError> {
         // This is required for the collect down below.
         let mut entries = vec![];
 
@@ -126,14 +132,14 @@ impl RomTable {
 
         // Read all the raw romtable entries and flatten them.
 
-        let reader = RomTableReader::new(memory, base_address)
+        // This is not a needless collect! It fixes the borrowing issue with &mut Memory that clippy cannot detect!
+        use itertools::Itertools;
+        let reader: Vec<_> = RomTableReader::new(memory, base_address)
             .entries()
-            .filter_map(Result::ok)
-            // This is not a needless collect! It fixes the borrowing issue with &mut Memory that clippy cannot detect!
-            .collect::<Vec<RomTableEntryRaw>>();
+            .try_collect()?;
 
         // Iterate all entries and get their data.
-        for raw_entry in reader.into_iter() {
+        for (i, raw_entry) in reader.into_iter().enumerate() {
             let entry_base_addr = raw_entry.component_address();
 
             tracing::debug!("Parsing entry at {:#010x}", entry_base_addr);
@@ -146,8 +152,10 @@ impl RomTable {
                     format: raw_entry.format,
                     power_domain_id: raw_entry.power_domain_id,
                     power_domain_valid: raw_entry.power_domain_valid,
-                    component: CoresightComponent::new(component, memory.ap()),
+                    component: CoresightComponent::new(component, memory.fully_qualified_address()),
                 });
+            } else {
+                tracing::debug!("Entry #{} is not present, skipping.", i);
             }
         }
 
@@ -265,12 +273,12 @@ impl ComponentId {
 /// This reader is meant for internal use only.
 pub struct ComponentInformationReader<'probe: 'memory, 'memory> {
     base_address: u64,
-    memory: &'memory mut (dyn ArmProbe + 'probe),
+    memory: &'memory mut (dyn ArmMemoryInterface + 'probe),
 }
 
 impl<'probe: 'memory, 'memory> ComponentInformationReader<'probe, 'memory> {
     /// Creates a new `ComponentInformationReader` which can be used to extract the data from a component information table in memory.
-    pub fn new(base_address: u64, memory: &'memory mut (dyn ArmProbe + 'probe)) -> Self {
+    pub fn new(base_address: u64, memory: &'memory mut (dyn ArmMemoryInterface + 'probe)) -> Self {
         ComponentInformationReader {
             base_address,
             memory,
@@ -420,7 +428,7 @@ pub enum Component {
     /// For detailed information about Class 0x1 ROM Tables, see _Chapter D3 Class 0x1 ROM Tables_.
     Class1RomTable(ComponentId, RomTable),
     /// CoreSight component. For general information about CoreSight components, see the CoreSight Architecture Specification.
-
+    ///
     /// A CoreSight component can be a Class 0x9 ROM Table, which can be identified from the DEVARCH.ARCHID having the value 0x0AF7. See also _ROM Table Types on page D2-237_. For detailed information about Class 0x9 ROM Tables, see _Chapter D4 Class 0x9 ROM Tables_.
     CoresightComponent(ComponentId),
     /// Peripheral Test Block.
@@ -434,12 +442,22 @@ pub enum Component {
 impl Component {
     /// Tries to parse a CoreSight component table.
     pub fn try_parse<'probe: 'memory, 'memory>(
-        memory: &'memory mut (dyn ArmProbe + 'probe),
+        memory: &'memory mut (dyn ArmMemoryInterface + 'probe),
         baseaddr: u64,
     ) -> Result<Component, RomTableError> {
         tracing::debug!("\tReading component data at: {:#010x}", baseaddr);
 
-        let component_id = ComponentInformationReader::new(baseaddr, memory).read_all()?;
+        let component_id = match ComponentInformationReader::new(baseaddr, memory).read_all() {
+            Ok(cid) => cid,
+            Err(_) => {
+                tracing::error!("\tFailed to read component information at {baseaddr:#x}.");
+                ComponentId {
+                    component_address: baseaddr,
+                    class: RawComponent::GenericIPComponent,
+                    peripheral_id: PeripheralID::from_raw(&[0; 8], 0, 0),
+                }
+            }
+        };
 
         // Determine the component class to find out what component we are dealing with.
         tracing::debug!("\tComponent class: {:x?}", component_id.class);
@@ -493,13 +511,16 @@ pub struct CoresightComponent {
     /// The component variant that is accessible.
     pub component: Component,
     /// The probe access point where the component can be accessed from
-    pub ap: MemoryAp,
+    pub ap_address: FullyQualifiedApAddress,
 }
 
 impl CoresightComponent {
     /// Construct a coresight component found on the provided access point.
-    pub fn new(component: Component, ap: MemoryAp) -> Self {
-        Self { component, ap }
+    pub fn new(component: Component, ap: FullyQualifiedApAddress) -> Self {
+        Self {
+            component,
+            ap_address: ap,
+        }
     }
 
     /// Reads a register of the component pointed to by this romtable entry.
@@ -508,7 +529,7 @@ impl CoresightComponent {
         interface: &mut dyn ArmProbeInterface,
         offset: u32,
     ) -> Result<u32, ArmError> {
-        let mut memory = interface.memory_interface(self.ap)?;
+        let mut memory = interface.memory_interface(&self.ap_address)?;
         let value = memory.read_word_32(self.component.id().component_address + offset as u64)?;
         Ok(value)
     }
@@ -520,7 +541,7 @@ impl CoresightComponent {
         offset: u32,
         value: u32,
     ) -> Result<(), ArmError> {
-        let mut memory = interface.memory_interface(self.ap)?;
+        let mut memory = interface.memory_interface(&self.ap_address)?;
         memory.write_word_32(self.component.id().component_address + offset as u64, value)?;
         Ok(())
     }
@@ -738,24 +759,33 @@ impl PeripheralID {
             ("ARM Ltd", 0x961, _, 0x0000) => Some(PartInfo::new("CoreSight TMC", PeripheralType::Tmc)),
             ("ARM Ltd", 0x962, 0x00, 0x0000) => Some(PartInfo::new("CoreSight STM", PeripheralType::Stm)),
             ("ARM Ltd", 0x963, 0x63, 0x0a63) => Some(PartInfo::new("CoreSight STM", PeripheralType::Stm)),
-            ("ARM Ltd", 0x975, 0x13, 0x4a13) => Some(PartInfo::new("Cortex-M7 ETM", PeripheralType::Etm)),
             ("ARM Ltd", 0x9A1, 0x11, 0x0000) => Some(PartInfo::new("Cortex-M4 TPIU", PeripheralType::Tpiu)),
+            ("ARM Ltd", 0x9A3, 0x13, 0x0000) => Some(PartInfo::new("Cortex-M0 MTB", PeripheralType::Mtb)),
             ("ARM Ltd", 0x9A9, 0x11, 0x0000) => Some(PartInfo::new("Cortex-M7 TPIU", PeripheralType::Tpiu)),
-            ("ARM Ltd", 0xD20, 0x00, 0x2A04) => Some(PartInfo::new("Cortex-M23 SCS", PeripheralType::Scs)),
             ("ARM Ltd", 0xD20, 0x11, 0x0000) => Some(PartInfo::new("Cortex-M23 TPIU", PeripheralType::Tpiu)),
             ("ARM Ltd", 0xD20, 0x13, 0x0000) => Some(PartInfo::new("Cortex-M23 ETM", PeripheralType::Etm)),
-            ("ARM Ltd", 0xD20, 0x00, 0x1A02) => Some(PartInfo::new("Cortex-M23 DWT", PeripheralType::Dwt)),
-            ("ARM Ltd", 0xD20, 0x00, 0x1A03) => Some(PartInfo::new("Cortex-M23 FBP", PeripheralType::Fbp)),
-            ("ARM Ltd", 0xD20, 0x14, 0x1A14) => Some(PartInfo::new("Cortex-M23 CTI", PeripheralType::Cti)),
-            ("ARM Ltd", 0xD21, 0x00, 0x2A04) => Some(PartInfo::new("Cortex-M33 SCS", PeripheralType::Scs)),
-            ("ARM Ltd", 0xD21, 0x43, 0x1A01) => Some(PartInfo::new("Cortex-M33 ITM", PeripheralType::Itm)),
-            ("ARM Ltd", 0xD21, 0x00, 0x1A02) => Some(PartInfo::new("Cortex-M33 DWT", PeripheralType::Dwt)),
-            ("ARM Ltd", 0xD21, 0x00, 0x1A03) => Some(PartInfo::new("Cortex-M33 BPU", PeripheralType::Bpu)),
-            ("ARM Ltd", 0xD21, 0x13, 0x4A13) => Some(PartInfo::new("Cortex-M33 ETM", PeripheralType::Etm)),
-            ("ARM Ltd", 0xD21, 0x11, 0x0000) => Some(PartInfo::new("Cortex-M33 TPIU", PeripheralType::Tpiu)),
-            ("ARM Ltd", 0xD21, 0x14, 0x1A14) => Some(PartInfo::new("Cortex-M33 CTI", PeripheralType::Cti)),
-            ("ARM Ltd", 0x9A3, 0x13, 0x0000) => Some(PartInfo::new("Cortex-M0 MTB", PeripheralType::Mtb)),
+            // From Arm Cortex-M55 Processor Technical Reference Manual
+            ("ARM Ltd", 0xD22, 0x11, 0x0000) => Some(PartInfo::new("Cortex-M55 TPIU", PeripheralType::Tpiu)),
+            // From IHI0029F: Coresight v3.0 architecture Specification
+            ("ARM Ltd", _, _, 0x0A06) => Some(PartInfo::new("PMU architecture", PeripheralType::Pmu)),
+            ("ARM Ltd", _, _, 0x1A01) => Some(PartInfo::new("ITM architecture", PeripheralType::Itm)),
+            ("ARM Ltd", _, _, 0x1A02) => Some(PartInfo::new("DWT architecture", PeripheralType::Dwt)),
+            ("ARM Ltd", _, _, 0x0A17) => Some(PartInfo::new("Memory Access Port v2", PeripheralType::MemAp)),
+            ("ARM Ltd", _, _, 0x1A03) => Some(PartInfo::new("FPB architecture", PeripheralType::Fbp)),
+            ("ARM Ltd", _, _, 0x1A14) => Some(PartInfo::new("CTI architecture", PeripheralType::Cti)),
+            ("ARM Ltd", _, _, 0x2A04) => Some(PartInfo::new("Processor debug architecture (ARMv8-M)", PeripheralType::Scs)),
+            ("ARM Ltd", _, _, 0x4A13) => Some(PartInfo::new("ETM architecture", PeripheralType::Etm)),
+            ("ARM Ltd", _, _, 0x0AF7) => Some(PartInfo::new("ROM architecture", PeripheralType::Rom)),
+            // From Arm CoreSight System-on-Chip SoC-600 Technical Reference Manual
+            ("ARM Ltd", 0x193, _, _) => Some(PartInfo::new("SoC-600 Timestamp Generator", PeripheralType::Tsgen)),
+            ("ARM Ltd", 0x9E7, 0x11, 0x0000) => Some(PartInfo::new("SoC-600 TPIU", PeripheralType::Tpiu)),
+            ("ARM Ltd", 0x9EB, 0x12, 0x0000) => Some(PartInfo::new("SoC-600 ATB Funnel", PeripheralType::TraceFunnel)),
+            // From Arm CoreSight TPIU-M Technical Reference Manual
+            ("ARM Ltd", 0x9F1, 0x11, _) => Some(PartInfo::new("Coresigth TPIU-M", PeripheralType::Tpiu)),
+            // vendors
             ("Atmel", 0xCD0, 1, 0) => Some(PartInfo::new("Atmel DSU", PeripheralType::Custom)),
+            ("Raspberry Pi Trading Ltd", _, _, 0x0AF7) => Some(PartInfo::new("RP235x CoreSight ROM", PeripheralType::Rom)),
+
             _ => None,
         }
     }
@@ -832,6 +862,10 @@ pub enum PeripheralType {
     Mtb,
     /// Cross Trigger Interface
     Cti,
+    /// Memory Access Port
+    MemAp,
+    /// Performance monitoring unit
+    Pmu,
     /// Non-standard peripheral
     Custom,
 }
@@ -839,23 +873,25 @@ pub enum PeripheralType {
 impl std::fmt::Display for PeripheralType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PeripheralType::Tpiu => write!(f, "Tpiu (Trace Port Interface Unit)"),
-            PeripheralType::Itm => write!(f, "Itm (Instrumentation Trace Module)"),
-            PeripheralType::Dwt => write!(f, "Dwt (Data Watchpoint and Trace)"),
-            PeripheralType::Scs => write!(f, "Scs (System Control Space)"),
-            PeripheralType::Fbp => write!(f, "Fbp (Flash Patch and Breakpoint)"),
-            PeripheralType::Bpu => write!(f, "Bpu (Breakpoint Unit)"),
-            PeripheralType::Etm => write!(f, "Etm (Embedded Trace)"),
-            PeripheralType::Etb => write!(f, "Etb (Trace Buffer)"),
-            PeripheralType::Rom => write!(f, "Rom"),
-            PeripheralType::Swo => write!(f, "Swo (Single Wire Output)"),
-            PeripheralType::Stm => write!(f, "Stm (System Trace Macrocell)"),
+            PeripheralType::Tpiu => write!(f, "TPIU (Trace Port Interface Unit)"),
+            PeripheralType::Itm => write!(f, "ITM (Instrumentation Trace Module)"),
+            PeripheralType::Dwt => write!(f, "DWT (Data Watchpoint and Trace)"),
+            PeripheralType::Scs => write!(f, "SCS (System Control Space)"),
+            PeripheralType::Fbp => write!(f, "FBP (Flash Patch and Breakpoint)"),
+            PeripheralType::Bpu => write!(f, "BPU (Breakpoint Unit)"),
+            PeripheralType::Etm => write!(f, "ETM (Embedded Trace Macrocell)"),
+            PeripheralType::Etb => write!(f, "ETB (Embedded Trace Buffer)"),
+            PeripheralType::Rom => write!(f, "ROM"),
+            PeripheralType::Swo => write!(f, "SWO (Single Wire Output)"),
+            PeripheralType::Stm => write!(f, "STM (System Trace Macrocell)"),
             PeripheralType::TraceFunnel => write!(f, "Trace Funnel"),
-            PeripheralType::Tsgen => write!(f, "Tsgen (Time Stamp Generator)"),
-            PeripheralType::Tmc => write!(f, "Tmc (Trace Memory Controller)"),
+            PeripheralType::Tsgen => write!(f, "TSGEN (Time Stamp Generator)"),
+            PeripheralType::Tmc => write!(f, "TMC (Trace Memory Controller)"),
             PeripheralType::Mtb => write!(f, "MTB (Micro Trace Buffer)"),
             PeripheralType::Cti => write!(f, "CTI (Cross Trigger Interface)"),
             PeripheralType::Custom => write!(f, "(Non-standard peripheral)"),
+            PeripheralType::MemAp => write!(f, "MEM-AP (Memory Access Port)"),
+            PeripheralType::Pmu => write!(f, "PMU (Performance Monitoring Unit)"),
         }
     }
 }

@@ -8,31 +8,34 @@
 //! are ARMv8, or the STM32H7 which is ARMv7 but has a more complicated DBGMCU at a different
 //! address.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use probe_rs_target::CoreType;
 
 use crate::architecture::arm::{
-    ap::MemoryAp,
     component::TraceSink,
-    memory::{adi_v5_memory_interface::ArmProbe, CoresightComponent},
+    memory::{ArmMemoryInterface, CoresightComponent},
     sequences::ArmDebugSequence,
-    ArmError, ArmProbeInterface,
+    ArmError, ArmProbeInterface, FullyQualifiedApAddress,
 };
 
 /// Marker structure for most ARMv7 STM32 devices.
 #[derive(Debug)]
-pub struct Stm32Armv7 {}
+pub struct Stm32Armv7 {
+    saved_cr_value: Mutex<Option<u32>>,
+}
 
 impl Stm32Armv7 {
     /// Create the sequencer for most ARMv7 STM32 families.
     pub fn create() -> Arc<Self> {
-        Arc::new(Self {})
+        Arc::new(Self {
+            saved_cr_value: Mutex::new(None),
+        })
     }
 }
 
 mod dbgmcu {
-    use crate::architecture::arm::{memory::adi_v5_memory_interface::ArmProbe, ArmError};
+    use crate::architecture::arm::{memory::ArmMemoryInterface, ArmError};
     use bitfield::bitfield;
 
     /// The base address of the DBGMCU component
@@ -56,13 +59,13 @@ mod dbgmcu {
         const ADDRESS: u64 = 0x04;
 
         /// Read the control register from memory.
-        pub fn read(memory: &mut dyn ArmProbe) -> Result<Self, ArmError> {
+        pub fn read(memory: &mut dyn ArmMemoryInterface) -> Result<Self, ArmError> {
             let contents = memory.read_word_32(DBGMCU + Self::ADDRESS)?;
             Ok(Self(contents))
         }
 
         /// Write the control register to memory.
-        pub fn write(&mut self, memory: &mut dyn ArmProbe) -> Result<(), ArmError> {
+        pub fn write(&mut self, memory: &mut dyn ArmMemoryInterface) -> Result<(), ArmError> {
             memory.write_word_32(DBGMCU + Self::ADDRESS, self.0)
         }
     }
@@ -72,12 +75,13 @@ impl ArmDebugSequence for Stm32Armv7 {
     fn debug_device_unlock(
         &self,
         interface: &mut dyn ArmProbeInterface,
-        default_ap: MemoryAp,
+        default_ap: &FullyQualifiedApAddress,
         _permissions: &crate::Permissions,
     ) -> Result<(), ArmError> {
         let mut memory = interface.memory_interface(default_ap)?;
-
         let mut cr = dbgmcu::Control::read(&mut *memory)?;
+        self.saved_cr_value.lock().unwrap().replace(cr.0);
+
         cr.enable_standby_debug(true);
         cr.enable_sleep_debug(true);
         cr.enable_stop_debug(true);
@@ -88,15 +92,14 @@ impl ArmDebugSequence for Stm32Armv7 {
 
     fn debug_core_stop(
         &self,
-        memory: &mut dyn ArmProbe,
+        memory: &mut dyn ArmMemoryInterface,
         _core_type: CoreType,
     ) -> Result<(), ArmError> {
-        let mut cr = dbgmcu::Control::read(&mut *memory)?;
-        cr.enable_standby_debug(false);
-        cr.enable_sleep_debug(false);
-        cr.enable_stop_debug(false);
-        cr.write(&mut *memory)?;
-
+        let mut saved_cr_value = self.saved_cr_value.lock().unwrap();
+        if let Some(crv) = saved_cr_value.take() {
+            let mut cr = dbgmcu::Control(crv);
+            cr.write(&mut *memory)?;
+        }
         Ok(())
     }
 
@@ -106,7 +109,7 @@ impl ArmDebugSequence for Stm32Armv7 {
         components: &[CoresightComponent],
         sink: &TraceSink,
     ) -> Result<(), ArmError> {
-        let mut memory = interface.memory_interface(components[0].ap)?;
+        let mut memory = interface.memory_interface(&components[0].ap_address)?;
         let mut cr = dbgmcu::Control::read(&mut *memory)?;
 
         if matches!(sink, TraceSink::Tpiu(_) | TraceSink::Swo(_)) {

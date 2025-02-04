@@ -1,5 +1,7 @@
+use crate::memory::RegionMergeIterator as _;
 use crate::serialize::hex_jep106_option;
-use crate::CoreAccessOptions;
+use crate::{chip_detection::ChipDetectionMethod, CoreAccessOptions};
+use crate::{MemoryRange, MemoryRegion};
 
 use super::chip::Chip;
 use super::flash_algorithm::RawFlashAlgorithm;
@@ -176,6 +178,7 @@ impl InstructionSet {
 /// This struct is usually read from a target description
 /// file.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ChipFamily {
     /// This is the name of the chip family in base form.
     /// E.g. `nRF52832`.
@@ -183,6 +186,9 @@ pub struct ChipFamily {
     /// The JEP106 code of the manufacturer.
     #[serde(serialize_with = "hex_jep106_option")]
     pub manufacturer: Option<JEP106Code>,
+    /// The method(s) that may be able to identify targets in this family.
+    #[serde(default)]
+    pub chip_detection: Vec<ChipDetectionMethod>,
     /// The `target-gen` process will set this to `true`.
     /// Please change this to `false` if this file is modified from the generated, or is a manually created target description.
     #[serde(default)]
@@ -217,6 +223,7 @@ impl ChipFamily {
         self.ensure_at_least_one_core()?;
         self.reject_incorrect_core_access_options()?;
         self.validate_memory_regions()?;
+        self.validate_rtt_scan_regions()?;
 
         Ok(())
     }
@@ -362,6 +369,39 @@ impl ChipFamily {
 
         Ok(())
     }
+
+    fn validate_rtt_scan_regions(&self) -> Result<(), String> {
+        for variant in &self.variants {
+            let Some(rtt_scan_ranges) = &variant.rtt_scan_ranges else {
+                return Ok(());
+            };
+
+            let ram_regions = variant
+                .memory_map
+                .iter()
+                .filter_map(MemoryRegion::as_ram_region)
+                .merge_consecutive()
+                .collect::<Vec<_>>();
+
+            // The custom ranges must all be enclosed by exactly one of
+            // the defined RAM regions.
+            for scan_range in rtt_scan_ranges {
+                if ram_regions
+                    .iter()
+                    .any(|region| region.range.contains_range(scan_range))
+                {
+                    continue;
+                }
+
+                return Err(format!(
+                    "The RTT scan region ({:#010x?}) of {} is not enclosed by any single RAM region.",
+                    scan_range, variant.name,
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl ChipFamily {
@@ -380,5 +420,33 @@ impl ChipFamily {
     pub fn get_algorithm(&self, name: impl AsRef<str>) -> Option<&RawFlashAlgorithm> {
         let name = name.as_ref();
         self.flash_algorithms.iter().find(|elem| elem.name == name)
+    }
+
+    /// Tries to find a [RawFlashAlgorithm] with a given name and returns it with the
+    /// core assignment fixed to the cores of the given chip.
+    pub fn get_algorithm_for_chip(
+        &self,
+        name: impl AsRef<str>,
+        chip: &Chip,
+    ) -> Option<RawFlashAlgorithm> {
+        self.get_algorithm(name).map(|algo| {
+            let mut algo_cores = if algo.cores.is_empty() {
+                chip.cores.iter().map(|core| core.name.clone()).collect()
+            } else {
+                algo.cores.clone()
+            };
+
+            // only keep cores in the algo that are also in the chip
+            algo_cores.retain(|algo_core| {
+                chip.cores
+                    .iter()
+                    .any(|chip_core| &chip_core.name == algo_core)
+            });
+
+            RawFlashAlgorithm {
+                cores: algo_cores,
+                ..algo.clone()
+            }
+        })
     }
 }
